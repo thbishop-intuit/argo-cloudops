@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -160,17 +159,13 @@ func (m mockCredentialsProvider) ProjectExists(name string) (bool, error) {
 }
 
 func (m mockCredentialsProvider) TargetExists(projectName, targetName string) (bool, error) {
-	if targetName == "TARGET_ALREADY_EXISTS" {
-		return true, nil
-	}
-	return false, nil
+	return targetName == "TARGET_ALREADY_EXISTS", nil
 }
 
 type test struct {
 	name     string
 	req      interface{}
 	want     int
-	body     string
 	respFile string
 	asAdmin  bool
 	url      string
@@ -228,11 +223,10 @@ func TestCreateProject(t *testing.T) {
 func TestDeleteProject(t *testing.T) {
 	tests := []test{
 		{
-			name:    "fails to delete project when not admin",
-			want:    http.StatusUnauthorized,
-			asAdmin: false,
-			url:     "/projects/projectalreadyexists",
-			method:  http.MethodDelete,
+			name:   "fails to delete project when not admin",
+			want:   http.StatusUnauthorized,
+			url:    "/projects/projectalreadyexists",
+			method: http.MethodDelete,
 		},
 		{
 			name:    "can delete project",
@@ -303,7 +297,6 @@ func TestCreateTarget(t *testing.T) {
 			req:      loadJSON(t, "TestCreateTarget/fails_to_create_target_when_not_admin_request.json"),
 			want:     http.StatusUnauthorized,
 			respFile: "TestCreateTarget/fails_to_create_target_when_not_admin_response.json",
-			asAdmin:  false,
 			url:      "/projects/projectalreadyexists/targets",
 			method:   http.MethodPost,
 		},
@@ -341,11 +334,10 @@ func TestCreateTarget(t *testing.T) {
 func TestDeleteTarget(t *testing.T) {
 	tests := []test{
 		{
-			name:    "fails to delete target when not admin",
-			want:    http.StatusUnauthorized,
-			asAdmin: false,
-			url:     "/projects/projectalreadyexists/targets/target1",
-			method:  http.MethodDelete,
+			name:   "fails to delete target when not admin",
+			want:   http.StatusUnauthorized,
+			url:    "/projects/projectalreadyexists/targets/target1",
+			method: http.MethodDelete,
 		},
 		{
 			name:    "can delete target",
@@ -602,17 +594,6 @@ func runTests(t *testing.T, tests []test) {
 				t.Errorf("Unexpected status code %d", resp.StatusCode)
 			}
 
-			if tt.body != "" {
-				bodyBytes, err := ioutil.ReadAll(resp.Body)
-				defer resp.Body.Close()
-				if err != nil {
-					t.Errorf("Error loading body")
-				}
-				if tt.body != string(bodyBytes) {
-					t.Errorf("Unexpected body '%s', expected '%s'", bodyBytes, tt.body)
-				}
-			}
-
 			if tt.respFile != "" {
 				wantBody, err := loadFileBytes(tt.respFile)
 				if err != nil {
@@ -620,9 +601,8 @@ func runTests(t *testing.T, tests []test) {
 				}
 
 				body, err := io.ReadAll(resp.Body)
-				assert.Nil(t, err)
-
 				defer resp.Body.Close()
+				assert.Nil(t, err)
 
 				assert.JSONEq(t, string(wantBody), string(body))
 			}
