@@ -110,7 +110,7 @@ func (m mockCredentialsProvider) CreateProject(name string) (string, string, err
 
 func (m mockCredentialsProvider) DeleteProject(name string) error {
 	if name == "undeletableproject" {
-		return fmt.Errorf("Some error occured deleting this project")
+		return fmt.Errorf("Some error occurred deleting this project")
 	}
 	return nil
 }
@@ -132,7 +132,7 @@ func (m mockCredentialsProvider) GetTarget(string, string) (responses.TargetProp
 
 func (m mockCredentialsProvider) DeleteTarget(string, t string) error {
 	if t == "undeletabletarget" {
-		return fmt.Errorf("Some error occured deleting this target")
+		return fmt.Errorf("Some error occurred deleting this target")
 	}
 	return nil
 }
@@ -185,7 +185,7 @@ func TestCreateProject(t *testing.T) {
 			want:     http.StatusUnauthorized,
 			respFile: "TestCreateProject/fails_to_create_project_when_not_admin_response.json",
 			url:      "/projects",
-			method:   "POST",
+			method:   http.MethodPost,
 		},
 		{
 			name:     "can create project",
@@ -194,7 +194,7 @@ func TestCreateProject(t *testing.T) {
 			respFile: "TestCreateProject/can_create_project_response.json",
 			asAdmin:  true,
 			url:      "/projects",
-			method:   "POST",
+			method:   http.MethodPost,
 		},
 		{
 			name:     "bad request",
@@ -203,7 +203,7 @@ func TestCreateProject(t *testing.T) {
 			respFile: "TestCreateProject/bad_response.json",
 			asAdmin:  true,
 			url:      "/projects",
-			method:   "POST",
+			method:   http.MethodPost,
 		},
 		{
 			name:    "project name cannot already exist",
@@ -211,7 +211,7 @@ func TestCreateProject(t *testing.T) {
 			want:    http.StatusBadRequest,
 			asAdmin: true,
 			url:     "/projects",
-			method:  "POST",
+			method:  http.MethodPost,
 		},
 		{
 			name:    "project fails to create db entry",
@@ -219,7 +219,7 @@ func TestCreateProject(t *testing.T) {
 			want:    http.StatusInternalServerError,
 			asAdmin: true,
 			url:     "/projects",
-			method:  "POST",
+			method:  http.MethodPost,
 		},
 	}
 	runTests(t, tests)
@@ -232,35 +232,35 @@ func TestDeleteProject(t *testing.T) {
 			want:    http.StatusUnauthorized,
 			asAdmin: false,
 			url:     "/projects/projectalreadyexists",
-			method:  "DELETE",
+			method:  http.MethodDelete,
 		},
 		{
 			name:    "can delete project",
 			want:    http.StatusOK,
 			asAdmin: true,
 			url:     "/projects/projectalreadyexists",
-			method:  "DELETE",
+			method:  http.MethodDelete,
 		},
 		{
 			name:    "fails to delete project if any targets exist",
 			want:    http.StatusBadRequest,
 			asAdmin: true,
 			url:     "/projects/undeletableprojecttargets",
-			method:  "DELETE",
+			method:  http.MethodDelete,
 		},
 		{
 			name:    "fails to delete project",
 			want:    http.StatusInternalServerError,
 			asAdmin: true,
 			url:     "/projects/undeletableproject",
-			method:  "DELETE",
+			method:  http.MethodDelete,
 		},
 		{
 			name:    "fails to delete project db entry",
 			want:    http.StatusInternalServerError,
 			asAdmin: true,
 			url:     "/projects/somedeletedberror",
-			method:  "DELETE",
+			method:  http.MethodDelete,
 		},
 	}
 	runTests(t, tests)
@@ -272,14 +272,14 @@ func TestGetProject(t *testing.T) {
 			name:    "project exists, successful get project",
 			want:    http.StatusOK,
 			asAdmin: true,
-			method:  "GET",
+			method:  http.MethodGet,
 			url:     "/projects/project1",
 		},
 		{
 			name:    "project does not exist",
 			want:    http.StatusNotFound,
 			asAdmin: true,
-			method:  "GET",
+			method:  http.MethodGet,
 			url:     "/projects/projectdoesnotexist",
 		},
 	}
@@ -296,7 +296,7 @@ func TestCreateTarget(t *testing.T) {
 			respFile: "TestCreateTarget/can_create_target_response.json",
 			asAdmin:  true,
 			url:      "/projects/projectalreadyexists/targets",
-			method:   "POST",
+			method:   http.MethodPost,
 		},
 		{
 			name:     "fails to create target when not admin",
@@ -305,7 +305,7 @@ func TestCreateTarget(t *testing.T) {
 			respFile: "TestCreateTarget/fails_to_create_target_when_not_admin_response.json",
 			asAdmin:  false,
 			url:      "/projects/projectalreadyexists/targets",
-			method:   "POST",
+			method:   http.MethodPost,
 		},
 		{
 			name:     "bad request",
@@ -314,7 +314,7 @@ func TestCreateTarget(t *testing.T) {
 			respFile: "TestCreateTarget/bad_response.json",
 			asAdmin:  true,
 			url:      "/projects/projectalreadyexists/targets",
-			method:   "POST",
+			method:   http.MethodPost,
 		},
 		{
 			name:     "target name cannot already exist",
@@ -323,7 +323,7 @@ func TestCreateTarget(t *testing.T) {
 			respFile: "TestCreateTarget/target_name_cannot_already_exist_response.json",
 			asAdmin:  true,
 			url:      "/projects/projectalreadyexists/targets",
-			method:   "POST",
+			method:   http.MethodPost,
 		},
 		{
 			name:     "project must exist",
@@ -332,7 +332,7 @@ func TestCreateTarget(t *testing.T) {
 			respFile: "TestCreateTarget/project_must_exist_response.json",
 			asAdmin:  true,
 			url:      "/projects/projectdoesnotexist/targets",
-			method:   "POST",
+			method:   http.MethodPost,
 		},
 	}
 	runTests(t, tests)
@@ -345,21 +345,21 @@ func TestDeleteTarget(t *testing.T) {
 			want:    http.StatusUnauthorized,
 			asAdmin: false,
 			url:     "/projects/projectalreadyexists/targets/target1",
-			method:  "DELETE",
+			method:  http.MethodDelete,
 		},
 		{
 			name:    "can delete target",
 			want:    http.StatusOK,
 			asAdmin: true,
 			url:     "/projects/projectalreadyexists/targets/target1",
-			method:  "DELETE",
+			method:  http.MethodDelete,
 		},
 		{
 			name:    "target fails to delete",
 			want:    http.StatusInternalServerError,
 			asAdmin: true,
 			url:     "/projects/projectalreadyexists/targets/undeletabletarget",
-			method:  "DELETE",
+			method:  http.MethodDelete,
 		},
 	}
 	runTests(t, tests)
@@ -372,7 +372,7 @@ func TestCreateWorkflow(t *testing.T) {
 			req:      loadJSON(t, "TestCreateWorkflow/can_create_workflow_request.json"),
 			want:     http.StatusOK,
 			respFile: "TestCreateWorkflow/can_create_workflow_response.json",
-			method:   "POST",
+			method:   http.MethodPost,
 			url:      "/workflows",
 		},
 		// We test this specific validation as it's server side only.
@@ -381,7 +381,7 @@ func TestCreateWorkflow(t *testing.T) {
 			req:      loadJSON(t, "TestCreateWorkflow/framework_must_be_valid_request.json"),
 			want:     http.StatusBadRequest,
 			respFile: "TestCreateWorkflow/framework_must_be_valid_response.json",
-			method:   "POST",
+			method:   http.MethodPost,
 			url:      "/workflows",
 		},
 		// We test this specific validation as it's server side only.
@@ -390,21 +390,21 @@ func TestCreateWorkflow(t *testing.T) {
 			respFile: "TestCreateWorkflow/type_must_be_valid_response.json",
 			req:      loadJSON(t, "TestCreateWorkflow/type_must_be_valid_request.json"),
 			want:     http.StatusBadRequest,
-			method:   "POST",
+			method:   http.MethodPost,
 			url:      "/workflows",
 		},
 		{
 			name:   "project must exist",
 			req:    loadJSON(t, "TestCreateWorkflow/project_must_exist.json"),
 			want:   http.StatusBadRequest,
-			method: "POST",
+			method: http.MethodPost,
 			url:    "/workflows",
 		},
 		{
 			name:   "target must exist",
 			req:    loadJSON(t, "TestCreateWorkflow/target_must_exist.json"),
 			want:   http.StatusBadRequest,
-			method: "POST",
+			method: http.MethodPost,
 			url:    "/workflows",
 		},
 		// TODO with admin credentials should fail
@@ -419,7 +419,7 @@ func TestCreateWorkflowFromGit(t *testing.T) {
 			req:      loadJSON(t, "TestCreateWorkflowFromGit/good_request.json"),
 			want:     http.StatusOK,
 			respFile: "TestCreateWorkflowFromGit/good_response.json",
-			method:   "POST",
+			method:   http.MethodPost,
 			url:      "/projects/project1/targets/target1/operations",
 		},
 		{
@@ -427,7 +427,7 @@ func TestCreateWorkflowFromGit(t *testing.T) {
 			req:      loadJSON(t, "TestCreateWorkflowFromGit/bad_request.json"),
 			want:     http.StatusBadRequest,
 			respFile: "TestCreateWorkflowFromGit/bad_response.json",
-			method:   "POST",
+			method:   http.MethodPost,
 			url:      "/projects/project1/targets/target1/operations",
 		},
 		// TODO with admin credentials should fail
@@ -441,14 +441,14 @@ func TestGetWorkflow(t *testing.T) {
 			name:    "workflow exists, successful get workflow",
 			want:    http.StatusOK,
 			asAdmin: true,
-			method:  "GET",
+			method:  http.MethodGet,
 			url:     "/workflows/WORKFLOW_ALREADY_EXISTS",
 		},
 		{
 			name:    "workflow does not exist",
 			want:    http.StatusInternalServerError,
 			asAdmin: true,
-			method:  "GET",
+			method:  http.MethodGet,
 			url:     "/workflows/WORKFLOW_DOES_NOT_EXIST",
 		},
 	}
@@ -461,14 +461,14 @@ func TestGetWorkflowLogs(t *testing.T) {
 			name:    "successful get workflow logs",
 			want:    http.StatusOK,
 			asAdmin: true,
-			method:  "GET",
+			method:  http.MethodGet,
 			url:     "/workflows/WORKFLOW_ALREADY_EXISTS/logs",
 		},
 		{
 			name:    "workflow does not exist",
 			want:    http.StatusInternalServerError,
 			asAdmin: true,
-			method:  "GET",
+			method:  http.MethodGet,
 			url:     "/workflows/WORKFLOW_DOES_NOT_EXIST/logs",
 		},
 	}
@@ -481,7 +481,7 @@ func TestListWorkflows(t *testing.T) {
 			name:    "can get workflows",
 			want:    http.StatusOK,
 			asAdmin: true,
-			method:  "GET",
+			method:  http.MethodGet,
 			url:     "/projects/projects1/targets/target1/workflows",
 		},
 	}
