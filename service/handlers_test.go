@@ -89,7 +89,7 @@ func (m mockWorkflowSvc) List(ctx context.Context) ([]string, error) {
 	return []string{"project1-target1-abcde", "project2-target2-12345"}, nil
 }
 
-func (m mockWorkflowSvc) Submit(ctx context.Context, from string, parameters map[string]string) (string, error) {
+func (m mockWorkflowSvc) Submit(ctx context.Context, from string, parameters map[string]string, labels map[string]string) (string, error) {
 	return "wf-123456", nil
 }
 
@@ -621,6 +621,7 @@ func executeRequest(method string, url string, body *bytes.Buffer, asAdmin bool)
 		logger:                 log.NewNopLogger(),
 		newCredentialsProvider: newMockProvider,
 		argo:                   mockWorkflowSvc{},
+		argoCtx:                context.Background(),
 		config:                 config,
 		gitClient:              newMockGitClient(),
 		env: env.Vars{
