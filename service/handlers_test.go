@@ -180,7 +180,7 @@ func (m mockCredentialsProvider) TargetExists(projectName, targetName string) (b
 	return false, nil
 }
 
-func (m mockCredentialsProvider) UpdateTarget(projectName string, targetName string, targetProperties responses.TargetProperties, req requests.UpdateTarget) error {
+func (m mockCredentialsProvider) UpdateTarget(projectName string, targetName string, targetProperties requests.TargetProperties) error {
 	return nil
 }
 
@@ -481,7 +481,7 @@ func TestUpdateTarget(t *testing.T) {
 			respFile: "TestUpdateTarget/can_update_target_response.json",
 			asAdmin:  true,
 			url:      "/projects/projectalreadyexists/targets/TARGET_EXISTS",
-			method:   "PUT",
+			method:   http.MethodPatch,
 		},
 		{
 			name:     "fails to update target when not admin",
@@ -490,7 +490,7 @@ func TestUpdateTarget(t *testing.T) {
 			respFile: "TestUpdateTarget/fails_to_update_target_when_not_admin_response.json",
 			asAdmin:  false,
 			url:      "/projects/projectalreadyexists/targets/TARGET_EXISTS",
-			method:   "PUT",
+			method:   http.MethodPatch,
 		},
 		{
 			name:          "fails to update target when using a bad auth header",
@@ -500,7 +500,7 @@ func TestUpdateTarget(t *testing.T) {
 			asAdmin:       false,
 			badAuthHeader: true,
 			url:           "/projects/projectalreadyexists/targets/TARGET_EXISTS",
-			method:        "PUT",
+			method:        http.MethodPatch,
 		},
 		{
 			name:     "bad request",
@@ -509,8 +509,18 @@ func TestUpdateTarget(t *testing.T) {
 			respFile: "TestUpdateTarget/bad_response.json",
 			asAdmin:  true,
 			url:      "/projects/projectalreadyexists/targets/TARGET_EXISTS",
-			method:   "PUT",
+			method:   http.MethodPatch,
 		},
+		// TODO
+		// {
+		// 	name:     "only supports updating properties",
+		// 	req:      loadJSON(t, "TestUpdateTarget/bad_request.json"),
+		// 	want:     http.StatusBadRequest,
+		// 	respFile: "TestUpdateTarget/bad_response.json",
+		// 	asAdmin:  true,
+		// 	url:      "/projects/projectalreadyexists/targets/TARGET_EXISTS",
+		// 	method:   http.MethodPatch,
+		// },
 		{
 			name:     "target name must exist",
 			req:      loadJSON(t, "TestUpdateTarget/target_name_must_exist_request.json"),
@@ -518,7 +528,7 @@ func TestUpdateTarget(t *testing.T) {
 			respFile: "TestUpdateTarget/target_name_must_exist_response.json",
 			asAdmin:  true,
 			url:      "/projects/projectalreadyexists/targets/INVALID_TARGET",
-			method:   "PUT",
+			method:   http.MethodPatch,
 		},
 		{
 			name:     "project must exist",
@@ -527,7 +537,7 @@ func TestUpdateTarget(t *testing.T) {
 			respFile: "TestUpdateTarget/project_must_exist_response.json",
 			asAdmin:  true,
 			url:      "/projects/projectdoesnotexist/targets/TARGET_EXISTS",
-			method:   "PUT",
+			method:   http.MethodPatch,
 		},
 	}
 	runTests(t, tests)

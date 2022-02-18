@@ -22,7 +22,7 @@ const (
 type Provider interface {
 	CreateProject(string) (string, string, error)
 	CreateTarget(string, requests.CreateTarget) error
-	UpdateTarget(string, string, responses.TargetProperties, requests.UpdateTarget) error
+	UpdateTarget(string, string, requests.TargetProperties) error
 	DeleteProject(string) error
 	DeleteTarget(string, string) error
 	GetProject(string) (responses.GetProject, error)
@@ -428,23 +428,18 @@ func (v VaultProvider) TargetExists(projectName, targetName string) (bool, error
 }
 
 // UpdateTarget updates a targets policies for the project.
-func (v VaultProvider) UpdateTarget(projectName string, targetName string, targetProperties responses.TargetProperties, utr requests.UpdateTarget) error {
+// TODO should this really take an update target or just a normal one and have
+// to handle the differences? Should this just be Upsert?
+func (v VaultProvider) UpdateTarget(projectName string, targetName string, targetProps requests.TargetProperties) error {
 	if !v.isAdmin() {
 		return errors.New("admin credentials must be used to update target")
 	}
 
-	credentialType := targetProperties.CredentialType
-
-	// updatable properties
-	policyArns := utr.PolicyArns
-	policyDocument := utr.PolicyDocument
-	roleArn := utr.RoleArn
-
 	options := map[string]interface{}{
-		"credential_type": credentialType,
-		"policy_arns":     policyArns,
-		"policy_document": policyDocument,
-		"role_arns":       roleArn,
+		"credential_type": targetProps.CredentialType,
+		"policy_arns":     targetProps.PolicyArns,
+		"policy_document": targetProps.PolicyDocument,
+		"role_arns":       targetProps.RoleArn,
 	}
 
 	path := fmt.Sprintf("aws/roles/%s-%s-target-%s", vaultProjectPrefix, projectName, targetName)

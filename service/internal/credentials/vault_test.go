@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/argoproj-labs/argo-cloudops/internal/requests"
-	"github.com/argoproj-labs/argo-cloudops/internal/responses"
 
 	"github.com/google/go-cmp/cmp"
 	vault "github.com/hashicorp/vault/api"
@@ -164,7 +163,7 @@ func TestVaultUpdateTarget(t *testing.T) {
 				vaultLogicalSvc: &mockVaultLogical{err: tt.vaultErr},
 			}
 
-			err := v.UpdateTarget("test", "test-project", responses.TargetProperties{}, requests.UpdateTarget{})
+			err := v.UpdateTarget("test", "test-project", requests.TargetProperties{})
 			if err != nil {
 				if !tt.errResult {
 					t.Errorf("\ndid not expect error, got: %v", err)

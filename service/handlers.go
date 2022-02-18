@@ -877,7 +877,7 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 	projectName := vars["projectName"]
 	targetName := vars["targetName"]
 
-	l := h.requestLogger(r, "op", "update-target", "project", projectName)
+	l := h.requestLogger(r, "op", "update-target", "project", projectName, "target", targetName)
 
 	level.Debug(l).Log("message", "validating authorization header for update target")
 	ah := r.Header.Get("Authorization")
@@ -891,28 +891,6 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	level.Debug(l).Log("message", "reading request body")
-
-	var utr requests.UpdateTarget
-	reqBody, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		level.Error(l).Log("message", "error reading request data", "error", err)
-		h.errorResponse(w, "error reading request data", http.StatusInternalServerError)
-		return
-	}
-
-	if err := json.Unmarshal(reqBody, &utr); err != nil {
-		level.Error(l).Log("message", "error processing request", "error", err)
-		h.errorResponse(w, "error processing request", http.StatusBadRequest)
-		return
-	}
-
-	if err := utr.Validate(); err != nil {
-		level.Error(l).Log("message", "error invalid request", "error", err)
-		h.errorResponse(w, fmt.Sprintf("invalid request, %s", err), http.StatusBadRequest)
-		return
-	}
-
-	l = log.With(l, "target", targetName)
 
 	level.Debug(l).Log("message", "creating credential provider")
 	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
@@ -942,35 +920,68 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
+
 	if !targetExists {
 		level.Error(l).Log("message", "target not found")
 		h.errorResponse(w, "target not found", http.StatusNotFound)
 		return
 	}
 
-	existingTarget, err := cp.GetTarget(projectName, targetName)
+	target, err := cp.GetTarget(projectName, targetName)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving existing target")
 		h.errorResponse(w, "error retrieving target", http.StatusBadRequest)
 		return
 	}
 
+	newTargetProps := requests.TargetProperties{
+		CredentialType: target.Properties.CredentialType,
+		PolicyArns:     target.Properties.PolicyArns,
+		PolicyDocument: target.Properties.PolicyDocument,
+		RoleArn:        target.Properties.RoleArn,
+	}
+
+	// var targetProps requests.TargetProperties
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		level.Error(l).Log("message", "error reading request data", "error", err)
+		h.errorResponse(w, "error reading request data", http.StatusInternalServerError)
+		return
+	}
+
+	// We merge the new properties request body into the existing properties.
+	// TODO do we need to make sure there are actually changes in the
+	// properties (e.g. not '{ "properties": { } }') or the values are diff?
+	if err := json.Unmarshal(reqBody, &newTargetProps); err != nil {
+		level.Error(l).Log("message", "error processing request", "error", err)
+		h.errorResponse(w, "error processing request", http.StatusBadRequest)
+		return
+	}
+
+	if err := newTargetProps.Validate(); err != nil {
+		level.Error(l).Log("message", "error invalid request", "error", err)
+		h.errorResponse(w, fmt.Sprintf("invalid request, %s", err), http.StatusBadRequest)
+		return
+	}
+
+	// TODO update the existing target with the new properties
 	level.Debug(l).Log("message", "updating target")
-	err = cp.UpdateTarget(projectName, targetName, existingTarget.Properties, utr)
+	err = cp.UpdateTarget(projectName, targetName, newTargetProps)
 	if err != nil {
 		level.Error(l).Log("message", "error updating target", "error", err)
 		h.errorResponse(w, "error updating target", http.StatusInternalServerError)
 		return
 	}
 
-	newTarget, err := cp.GetTarget(projectName, targetName)
-	if err != nil {
-		level.Error(l).Log("message", "error retrieving new target information")
-		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
-		return
-	}
+	// Update our response with any new values.
+	// TODO should we just make another call to vault and get it back instead?
+	// or a helper? This is ripe to forget a field if a new one is added.
+	target.Properties.CredentialType = newTargetProps.CredentialType
+	target.Properties.PolicyArns = newTargetProps.PolicyArns
+	target.Properties.PolicyDocument = newTargetProps.PolicyDocument
+	target.Properties.RoleArn = newTargetProps.RoleArn
 
-	data, err := json.Marshal(newTarget)
+	data, err := json.Marshal(target)
 	if err != nil {
 		level.Error(l).Log("message", "error creating response", "error", err)
 		h.errorResponse(w, "error creating response object", http.StatusInternalServerError)

@@ -131,6 +131,7 @@ func (req CreateTarget) Validate() error {
 	return validations.Validate(v...)
 }
 
+// TODO just use TargetProperties.Validate()
 func (req CreateTarget) validateTargetProperties() error {
 	if err := validations.ValidateStruct(req.Properties); err != nil {
 		return err
@@ -186,6 +187,32 @@ type TargetProperties struct {
 	RoleArn        string   `json:"role_arn" valid:"required~role_arn is required"`
 }
 
+func (props TargetProperties) Validate() error {
+	if err := validations.ValidateStruct(props); err != nil {
+		return err
+	}
+
+	if props.CredentialType != "assumed_role" {
+		return errors.New("credential_type must be one of 'assumed_role'")
+	}
+
+	if !validations.IsValidARN(props.RoleArn) {
+		return errors.New("role_arn must be a valid arn")
+	}
+
+	if len(props.PolicyArns) > 5 {
+		return errors.New("policy_arns cannot be more than 5")
+	}
+
+	for _, arn := range props.PolicyArns {
+		if !validations.IsValidARN(arn) {
+			return errors.New("policy_arns contains an invalid arn")
+		}
+	}
+
+	return nil
+}
+
 // TargetOperation represents a target operation request.
 // TODO evaluate this vs. CreateGitWorkflow.
 type TargetOperation struct {
@@ -199,36 +226,4 @@ type TargetOperation struct {
 // Validate validates TargetOperation.
 func (req TargetOperation) Validate() error {
 	return validations.ValidateStruct(req)
-}
-
-// UpdateTarget request.
-type UpdateTarget struct {
-	PolicyArns     []string `json:"policy_arns"`
-	PolicyDocument string   `json:"policy_document"`
-	RoleArn        string   `json:"role_arn" valid:"required~role_arn is required"`
-}
-
-// Validate validates CreateTarget.
-func (req UpdateTarget) Validate() error {
-	v := []func() error{
-		func() error { return validations.ValidateStruct(req) },
-		req.validateTargetUpdate,
-	}
-	if len(req.PolicyArns) > 5 {
-		return errors.New("policy_arns cannot be more than 5")
-	}
-
-	for _, arn := range req.PolicyArns {
-		if !validations.IsValidARN(arn) {
-			return errors.New("policy_arns contains an invalid arn")
-		}
-	}
-	return validations.Validate(v...)
-}
-
-func (req UpdateTarget) validateTargetUpdate() error {
-	if !validations.IsValidARN(req.RoleArn) {
-		return errors.New("role_arn must be a valid arn")
-	}
-	return nil
 }
