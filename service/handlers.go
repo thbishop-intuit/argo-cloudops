@@ -59,6 +59,7 @@ type handler struct {
 	gitClient              git.Client
 	env                    env.Vars
 	dbClient               db.Client
+	credentialsPlugins     map[string]credentials.ProviderV2
 }
 
 // Service HealthCheck
@@ -576,21 +577,37 @@ func (h handler) createProject(w http.ResponseWriter, r *http.Request) {
 	l = log.With(l, "project", capp.Name)
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-		return
+	// TODO better way to do this?
+	credProvider := h.credentialsPlugins["vault"]
+
+	// cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
+	// if err != nil {
+	// 	level.Error(l).Log("message", "error creating credentials provider", "error", err)
+	// 	h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
+	// 	return
+	// }
+	projExistArgs := credentials.ProjectExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   capp.Name,
 	}
 
-	projectExists, err := cp.ProjectExists(capp.Name)
+	projExistResp, err := credProvider.ProjectExists(projExistArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	if projectExists {
+	// projectExists, err := cp.ProjectExists(capp.Name)
+	// if err != nil {
+	// 	level.Error(l).Log("message", "error checking project", "error", err)
+	// 	h.errorResponse(w, "error checking project", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// if projectExists {
+	if projExistResp.Exists {
 		level.Error(l).Log("error", "project already exists")
 		h.errorResponse(w, "project already exists", http.StatusBadRequest)
 		return
@@ -606,13 +623,24 @@ func (h handler) createProject(w http.ResponseWriter, r *http.Request) {
 		h.errorResponse(w, "error creating project", http.StatusInternalServerError)
 		return
 	}
+
 	level.Debug(l).Log("message", "creating project")
-	token, err := cp.CreateProject(capp.Name)
+
+	createProjReq := credentials.CreateProjectArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   capp.Name,
+	}
+
+	// token, err := cp.CreateProject(capp.Name)
+	createProjResp, err := credProvider.CreateProject(createProjReq)
 	if err != nil {
 		level.Error(l).Log("message", "error creating project", "error", err)
 		h.errorResponse(w, "error creating project", http.StatusInternalServerError)
 		return
 	}
+
+	token := createProjResp.Token
 
 	level.Debug(l).Log("message", "inserting token into DB")
 	err = h.dbClient.CreateTokenEntry(ctx, token)
@@ -795,40 +823,72 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	l = log.With(l, "target", ctr.Name)
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
+	credProvider := h.credentialsPlugins["vault"]
+
+	// cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
+	// if err != nil {
+	// 	level.Error(l).Log("message", "error creating credentials provider", "error", err)
+	// 	h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	projExistArgs := credentials.ProjectExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   ctr.Name,
+	}
+
+	projExistResp, err := credProvider.ProjectExists(projExistArgs)
 	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
+		level.Error(l).Log("message", "error checking project", "error", err)
+		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	projectExists, err := cp.ProjectExists(projectName)
-	if err != nil {
-		level.Error(l).Log("message", "error determining if project exists", "error", err)
-	}
+	// projectExists, err := cp.ProjectExists(projectName)
+	// if err != nil {
+	// 	level.Error(l).Log("message", "error determining if project exists", "error", err)
+	// }
 
 	// TODO Perhaps this should be 404
-	if !projectExists {
+	// if !projectExists {
+	if projExistResp.Exists {
 		level.Error(l).Log("message", "project does not exist")
 		h.errorResponse(w, "project does not exist", http.StatusBadRequest)
 		return
 	}
 
-	targetExists, err := cp.TargetExists(projectName, ctr.Name)
+	// targetExists, err := cp.TargetExists(projectName, ctr.Name)
+	targetExistArgs := credentials.TargetExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   ctr.Name,
+		TargetName:    ctr.Name,
+	}
+
+	targetExistsResp, err := credProvider.TargetExists(targetExistArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target", "error", err)
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
-	if targetExists {
+
+	if targetExistsResp.Exists {
 		level.Error(l).Log("message", "target name must not already exist")
 		h.errorResponse(w, "target name must not already exist", http.StatusBadRequest)
 		return
 	}
 
 	level.Debug(l).Log("message", "creating target")
-	err = cp.CreateTarget(projectName, types.Target(ctr))
-	if err != nil {
+	createTargetArgs := credentials.CreateTargetArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   ctr.Name,
+		Target:        types.Target(ctr),
+	}
+
+	// err = cp.CreateTarget(projectName, types.Target(ctr))
+	if _, err := credProvider.CreateTarget(createTargetArgs); err != nil {
 		level.Error(l).Log("message", "error creating target", "error", err)
 		h.errorResponse(w, "error creating target", http.StatusInternalServerError)
 		return

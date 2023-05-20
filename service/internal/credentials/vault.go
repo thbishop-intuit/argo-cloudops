@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/rpc"
 	"strings"
 
 	"github.com/cello-proj/cello/internal/responses"
@@ -13,6 +14,7 @@ import (
 	"github.com/cello-proj/cello/internal/validations"
 	"github.com/cello-proj/cello/service/internal/env"
 
+	"github.com/hashicorp/go-plugin"
 	vault "github.com/hashicorp/vault/api"
 )
 
@@ -560,4 +562,471 @@ func isSecretIDAccessorExists(err error) bool {
 	// https://github.com/hashicorp/vault/pull/12788
 	// https://github.com/hashicorp/vault/releases/tag/v1.9.0
 	return !strings.Contains(err.Error(), "failed to find accessor entry for secret_id_accessor")
+}
+
+// ProviderV2 is an interface for interacting with credentials providers.
+// type ProviderV2 interface {
+// 	CreateProject(string) (types.Token, error)
+// 	CreateTarget(string, types.Target) error
+// 	CreateToken(string) (types.Token, error)
+// 	DeleteProject(string) error
+// 	DeleteProjectToken(string, string) error
+// 	DeleteTarget(string, string) error
+// 	GetProject(string) (responses.GetProject, error)
+// 	GetProjectToken(string, string) (types.ProjectToken, error)
+// 	GetTarget(string, string) (types.Target, error)
+// 	GetToken() (string, error)
+// 	ListTargets(string) ([]string, error)
+// 	ProjectExists(string) (bool, error)
+// 	TargetExists(string, string) (bool, error)
+// 	UpdateTarget(string, types.Target) error
+// }
+
+type ProviderV2 interface {
+	CreateProject(CreateProjectArgs) (CreateProjectResponse, error)
+	CreateTarget(CreateTargetArgs) (CreateTargetResponse, error)
+	CreateToken(CreateTokenArgs) (CreateTokenResponse, error)
+	// DeleteProject(DeleteProjectArgs) (DeleteProjectResponse, error)
+	// DeleteProjectToken(DeleteProjectArgs) (DeleteProjectResponse, error)
+	// DeleteTarget(DeleteTargetArgs) (DeleteTargetResponse, error)
+	// GetProject(GetProjectArgs) (GetProjectResponse, error)
+	// GetProjectToken(GetProjectArgs) (GetProjectResponse, error)
+	// GetTarget(GetTargetArgs) (GetTargetResponse, error)
+	// GetToken(GetTokenArgs) (GetTokenResponse, error)
+	// ListTargets(ListTargetsArgs) (ListTargetsResponse, error)
+	ProjectExists(ProjectExistsArgs) (ProjectExistsResponse, error)
+	TargetExists(TargetExistsArgs) (TargetExistsResponse, error)
+	// UpdateTarget(UpdateTargetArgs) (UpdateTargetResponse, error)
+}
+
+// Here is an implementation that talks over RPC
+type ProviderV2RPCClient struct {
+	client *rpc.Client
+}
+
+// CreateProject(string) (types.Token, error)
+type CreateProjectArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+}
+
+type CreateProjectResponse struct {
+	Token types.Token
+}
+
+// CreateTarget(string, types.Target) error
+type CreateTargetArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+	Target        types.Target
+}
+
+type CreateTargetResponse struct {
+}
+
+// CreateToken(string) (types.Token, error)
+type CreateTokenArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+}
+
+type CreateTokenResponse struct {
+	Token types.Token
+}
+
+// DeleteProject(string) error
+type DeleteProjectArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+}
+
+type DeleteProjectResponse struct {
+}
+
+// DeleteProjectToken(string, string) error
+type DeleteProjectTokenArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+	TokenID       string
+}
+
+type DeleteProjectTokenResponse struct {
+}
+
+// DeleteTarget(string, string) error
+type DeleteTargetArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+	TargetName    string
+}
+
+type DeleteTargetResponse struct {
+}
+
+// GetProject(string) (responses.GetProject, error)
+type GetProjectArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+}
+
+type GetProjectResponse struct {
+	Project responses.GetProject // TODO change this type?
+}
+
+// GetProjectToken(string, string) (types.ProjectToken, error)
+type GetProjectTokenArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+	TokenID       string // TODO correct?
+}
+
+type GetProjectTokenResponse struct {
+	Token types.ProjectToken
+}
+
+// GetTarget(string, string) (types.Target, error)
+type GetTargetArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+	TargetName    string
+}
+
+type GetTargetResponse struct {
+	Target types.Target
+}
+
+// GetToken() (string, error)
+type GetTokenArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	// TODO correct?
+}
+
+type GetTokenResponse struct {
+	TokenID string // TODO correct?
+}
+
+// ListTargets(string) ([]string, error)
+type ListTargetsArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+}
+
+type ListTargetsResponse struct {
+	Targets []string
+}
+
+// ProjectExists(string) (bool, error)
+type ProjectExistsArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+}
+
+type ProjectExistsResponse struct {
+	Exists bool
+}
+
+// TargetExists(string, string) (bool, error)
+type TargetExistsArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+	TargetName    string
+}
+
+type TargetExistsResponse struct {
+	Exists bool
+}
+
+// UpdateTarget(string, types.Target) error
+type UpdateTargetArgs struct {
+	Authorization Authorization
+	Headers       http.Header
+	ProjectName   string
+	Target        types.Target
+}
+
+type UpdateTargetResponse struct {
+}
+
+func (g *ProviderV2RPCClient) CreateProject(args CreateProjectArgs) (CreateProjectResponse, error) {
+	var resp CreateProjectResponse
+	err := g.client.Call("Plugin.CreateProject", args, &resp)
+	// if err != nil {
+	// 	return types.Token{}, err
+	// 	// // You usually want your interfaces to return errors. If they don't,
+	// 	// // there isn't much other choice here.
+	// 	// panic(err)
+	// }
+
+	return resp, err
+}
+
+func (g *ProviderV2RPCClient) CreateTarget(args CreateTargetArgs) (CreateTargetResponse, error) {
+	var resp CreateTargetResponse
+	err := g.client.Call("Plugin.CreateProject", args, &resp)
+	// if err != nil {
+	// 	return types.Token{}, err
+	// 	// // You usually want your interfaces to return errors. If they don't,
+	// 	// // there isn't much other choice here.
+	// 	// panic(err)
+	// }
+
+	return resp, err
+}
+
+// CreateToken(projectName string) (types.Token, error)
+func (g *ProviderV2RPCClient) CreateToken(args CreateTokenArgs) (CreateTokenResponse, error) {
+	var resp CreateTokenResponse
+	err := g.client.Call("Plugin.CreateToken", args, &resp)
+	return resp, err
+}
+
+// DeleteProject(name string) error
+// TODO
+func (g *ProviderV2RPCClient) DeleteProject(args DeleteProjectArgs) error {
+	return g.client.Call("Plugin.DeleteProject", args, nil)
+}
+
+// DeleteProjectToken(projectName string, tokenID string) error
+// TODO
+func (g *ProviderV2RPCClient) DeleteProjectToken(args DeleteProjectTokenArgs) error {
+	return g.client.Call("Plugin.DeleteProjectToken", args, nil)
+}
+
+// DeleteTarget(projectName string, targetName string) error
+// TODO
+func (g *ProviderV2RPCClient) DeleteTarget(args DeleteTargetArgs) error {
+	return g.client.Call("Plugin.DeleteTarget", args, nil)
+}
+
+// GetProject(name string) (responses.GetProject, error)
+func (g *ProviderV2RPCClient) GetProject(args GetProjectArgs) (GetProjectResponse, error) {
+	var resp GetProjectResponse
+	err := g.client.Call("Plugin.GetProject", args, &resp)
+	return resp, err
+}
+
+// GetProjectToken(projectName string, tokenID string) (types.ProjectToken, error)
+func (g *ProviderV2RPCClient) GetProjectToken(args GetProjectTokenArgs) (GetProjectTokenResponse, error) {
+	var resp GetProjectTokenResponse
+	err := g.client.Call("Plugin.GetProjectToken", args, &resp)
+	return resp, err
+}
+
+// GetTarget(projectName string, targetName string) (types.Target, error)
+func (g *ProviderV2RPCClient) GetTarget(args GetTargetArgs) (GetTargetResponse, error) {
+	var resp GetTargetResponse
+	err := g.client.Call("Plugin.GetTarget", args, &resp)
+	return resp, err
+}
+
+// GetToken() (string, error)
+// TODO args correct?
+func (g *ProviderV2RPCClient) GetToken(args GetTokenArgs) (GetTokenResponse, error) {
+	var resp GetTokenResponse
+	err := g.client.Call("Plugin.GetToken", args, &resp)
+	return resp, err
+}
+
+// ListTargets(projectName string) ([]string, error)
+func (g *ProviderV2RPCClient) ListTargets(args ListTargetsArgs) (ListTargetsResponse, error) {
+	var resp ListTargetsResponse
+	err := g.client.Call("Plugin.ListTargets", args, &resp)
+	return resp, err
+}
+
+// ProjectExists(projectName string) (bool, error)
+func (g *ProviderV2RPCClient) ProjectExists(args ProjectExistsArgs) (ProjectExistsResponse, error) {
+	var resp ProjectExistsResponse
+	err := g.client.Call("Plugin.ProjectExists", args, &resp)
+	return resp, err
+}
+
+// TargetExists(projectName string, targetName string) (bool, error)
+func (g *ProviderV2RPCClient) TargetExists(args TargetExistsArgs) (TargetExistsResponse, error) {
+	var resp TargetExistsResponse
+	err := g.client.Call("Plugin.TargetExists", args, &resp)
+	return resp, err
+}
+
+// UpdateTarget(projectName string, targetName types.Target) error
+// TODO
+func (g *ProviderV2RPCClient) UpdateTarget(args UpdateTargetArgs) error {
+	return g.client.Call("Plugin.UpdateTarget", args, nil)
+}
+
+// Previous implementation
+// func (g *ProviderV2RPCClient) CreateProject(name string) (types.Token, error) {
+// 	var resp types.Token
+// 	err := g.client.Call("Plugin.CreateProject", name, &resp)
+// 	// if err != nil {
+// 	// 	return types.Token{}, err
+// 	// 	// // You usually want your interfaces to return errors. If they don't,
+// 	// 	// // there isn't much other choice here.
+// 	// 	// panic(err)
+// 	// }
+
+// 	return resp, err
+// }
+
+// // CreateToken(projectName string) (types.Token, error)
+// func (g *ProviderV2RPCClient) CreateToken(projectName string) (types.Token, error) {
+// 	var resp types.Token
+// 	err := g.client.Call("Plugin.CreateToken", projectName, &resp)
+// 	return resp, err
+// }
+
+// // DeleteProject(name string) error
+// func (g *ProviderV2RPCClient) DeleteProject(name string) error {
+// 	return g.client.Call("Plugin.DeleteProject", name, nil)
+// }
+
+// // DeleteProjectToken(projectName string, tokenID string) error
+// func (g *ProviderV2RPCClient) DeleteProjectToken(projectName string, tokenID string) error {
+// 	return g.client.Call("Plugin.DeleteProjectToken", projectName, tokenID)
+// }
+
+// // DeleteTarget(projectName string, targetName string) error
+// func (g *ProviderV2RPCClient) DeleteTarget(projectName string, targetName string) error {
+// 	return g.client.Call("Plugin.DeleteTarget", projectName)
+// }
+
+// // GetProject(name string) (responses.GetProject, error)
+// func (g *ProviderV2RPCClient) GetProject(name string) (responses.GetProject, error) {
+// 	var resp responses.GetProject
+// 	err := g.client.Call("Plugin.GetProject", name, &resp)
+// 	return resp, err
+// }
+
+// // GetProjectToken(projectName string, tokenID string) (types.ProjectToken, error)
+// func (g *ProviderV2RPCClient) GetProjectToken(projectName string, tokenID string) (types.ProjectToken, error) {
+// 	var resp types.ProjectToken
+// 	err := g.client.Call("Plugin.GetProjectToken", projectName, &resp)
+// 	return resp, err
+// }
+
+// // GetTarget(projectName string, targetName string) (types.Target, error)
+// func (g *ProviderV2RPCClient) GetTarget(projectName string, targetName string) (types.Target, error) {
+// 	var resp types.Target
+// 	err := g.client.Call("Plugin.GetTarget", projectName, &resp)
+// 	return resp, err
+// }
+
+// // GetToken() (string, error)
+// func (g *ProviderV2RPCClient) GetToken() (string, error) {
+// 	var resp string
+// 	err := g.client.Call("Plugin.GetToken", &resp)
+// 	return resp, err
+// }
+
+// // ListTargets(projectName string) ([]string, error)
+// func (g *ProviderV2RPCClient) ListTargets(projectName string) ([]string, error) {
+// 	var resp []string
+// 	err := g.client.Call("Plugin.ListTargets", projectName, &resp)
+// 	return resp, err
+// }
+
+// // ProjectExists(projectName string) (bool, error)
+// func (g *ProviderV2RPCClient) ProjectExists(projectName string) (bool, error) {
+// 	var resp bool
+// 	err := g.client.Call("Plugin.ProjectExists", projectName, &resp)
+// 	return resp, err
+// }
+
+// // TargetExists(projectName string, targetName string) (bool, error)
+// func (g *ProviderV2RPCClient) TargetExists(projectName string, targetName string) (bool, error) {
+// 	var resp bool
+// 	err := g.client.Call("Plugin.TargetExists", projectName, &resp)
+// 	return resp, err
+// }
+
+// // UpdateTarget(projectName string, targetName types.Target) error
+// func (g *ProviderV2RPCClient) UpdateTarget(projectName string, targetName types.Target) error {
+// 	return g.client.Call("Plugin.UpdateTarget", projectName)
+// }
+
+// func (g *ProviderV2RPCClient) CreateTarget(name string) (types.Target, error) {
+// 	var resp types.Target
+// 	err := g.client.Call("Plugin.CreateProject", name, &resp)
+// 	// if err != nil {
+// 	// 	return types.Token{}, err
+// 	// 	// // You usually want your interfaces to return errors. If they don't,
+// 	// 	// // there isn't much other choice here.
+// 	// 	// panic(err)
+// 	// }
+
+// 	return resp, err
+// }
+
+// Here is the RPC server that ProviderV2RPC talks to, conforming to
+// the requirements of net/rpc
+type ProviderV2RPCServer struct {
+	// This is the real implementation
+	Impl ProviderV2
+}
+
+// TODO not sure if this is the best way to handle accepting/returning args
+func (s *ProviderV2RPCServer) CreateProject(args CreateProjectArgs, resp *CreateProjectResponse) error {
+	v, err := s.Impl.CreateProject(args)
+	*resp = v
+	return err
+}
+
+func (s *ProviderV2RPCServer) CreateTarget(args CreateTargetArgs, resp *CreateTargetResponse) error {
+	v, err := s.Impl.CreateTarget(args)
+	*resp = v
+	return err
+}
+
+func (s *ProviderV2RPCServer) CreateToken(args CreateTokenArgs, resp *CreateTokenResponse) error {
+	v, err := s.Impl.CreateToken(args)
+	*resp = v
+	return err
+}
+
+func (s *ProviderV2RPCServer) ProjectExists(args ProjectExistsArgs, resp *ProjectExistsResponse) error {
+	v, err := s.Impl.ProjectExists(args)
+	*resp = v
+	return err
+}
+
+func (s *ProviderV2RPCServer) TargetExists(args TargetExistsArgs, resp *TargetExistsResponse) error {
+	v, err := s.Impl.TargetExists(args)
+	*resp = v
+	return err
+}
+
+// This is the implementation of plugin.Plugin so we can serve/consume this
+//
+// This has two methods: Server must return an RPC server for this plugin
+// type. We construct a ProviderV2RPCServer for this.
+//
+// Client must return an implementation of our interface that communicates
+// over an RPC client. We return ProviderV2RPC for this.
+//
+// Ignore MuxBroker. That is used to create more multiplexed streams on our
+// plugin connection and is a more advanced use case.
+type ProviderV2Plugin struct {
+	// Impl Injection
+	Impl ProviderV2
+}
+
+func (p *ProviderV2Plugin) Server(*plugin.MuxBroker) (interface{}, error) {
+	return &ProviderV2RPCServer{Impl: p.Impl}, nil
+}
+
+func (ProviderV2Plugin) Client(b *plugin.MuxBroker, c *rpc.Client) (interface{}, error) {
+	return &ProviderV2RPCClient{client: c}, nil
 }

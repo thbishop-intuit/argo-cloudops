@@ -7,6 +7,7 @@ all: test build_service build_cli
 
 build_service: clean_service
 	CGO_ENABLED=0 GOARCH=amd64 go build -trimpath $(GO_LDFLAGS) -o build/service ./service/
+	CGO_ENABLED=0 GOARCH=amd64 go build -trimpath $(GO_LDFLAGS) -o build/plugin/vault ./service/plugin/vault/
 
 build_cli: clean_cli
 	CGO_ENABLED=0 GOARCH=amd64 go build -trimpath $(GO_LDFLAGS) -o build/cello ./cli/

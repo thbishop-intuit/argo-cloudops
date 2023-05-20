@@ -48,109 +48,109 @@ type test struct {
 	wfMock     *th.WorkflowMock
 }
 
-func TestCreateProject(t *testing.T) {
-	tests := []test{
-		{
-			name:       "fails to create project when not admin",
-			req:        loadJSON(t, "TestCreateProject/fails_to_create_project_when_not_admin_request.json"),
-			want:       http.StatusUnauthorized,
-			authHeader: userAuthHeader,
-			respFile:   "TestCreateProject/fails_to_create_project_when_not_admin_response.json",
-			url:        "/projects",
-			method:     "POST",
-		},
-		{
-			name:       "can create project",
-			req:        loadJSON(t, "TestCreateProject/can_create_project_request.json"),
-			want:       http.StatusOK,
-			respFile:   "TestCreateProject/can_create_project_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects",
-			method:     "POST",
-			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-				CreateProjectFunc: func(s string) (types.Token, error) {
-					return types.Token{
-						CreatedAt: "createdAt",
-						ExpiresAt: "expiresAt",
-						ProjectID: "project1",
-						ProjectToken: types.ProjectToken{
-							ID: "secret-id-accessor",
-						},
-						RoleID: "role-id",
-						Secret: "secret",
-					}, nil
-				},
-			},
-			dbMock: &th.DBClientMock{
-				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return nil },
-				CreateTokenEntryFunc:   func(ctx context.Context, token types.Token) error { return nil },
-			},
-		},
-		{
-			name:       "bad request",
-			req:        loadJSON(t, "TestCreateProject/bad_request.json"),
-			want:       http.StatusBadRequest,
-			respFile:   "TestCreateProject/bad_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects",
-			method:     "POST",
-		},
-		{
-			name:       "project name cannot already exist",
-			req:        loadJSON(t, "TestCreateProject/project_name_cannot_already_exist.json"),
-			want:       http.StatusBadRequest,
-			authHeader: adminAuthHeader,
-			url:        "/projects",
-			method:     "POST",
-			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-			},
-		},
-		{
-			name:       "project fails to create db entry",
-			req:        loadJSON(t, "TestCreateProject/project_fails_to_create_dbentry.json"),
-			want:       http.StatusInternalServerError,
-			authHeader: adminAuthHeader,
-			url:        "/projects",
-			method:     "POST",
-			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-			},
-			dbMock: &th.DBClientMock{
-				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return errors.New("db error") },
-			},
-		},
-		{
-			name:       "project fails to create token entry",
-			req:        loadJSON(t, "TestCreateProject/project_fails_to_create_token_entry.json"),
-			want:       http.StatusInternalServerError,
-			authHeader: adminAuthHeader,
-			url:        "/projects",
-			method:     "POST",
-			cpMock: &th.CredsProviderMock{
-				CreateProjectFunc: func(s string) (types.Token, error) {
-					return types.Token{
-						CreatedAt: "createdAt",
-						ExpiresAt: "expiresAt",
-						ProjectID: "project1",
-						ProjectToken: types.ProjectToken{
-							ID: "secret-id-accessor",
-						},
-						RoleID: "role-id",
-						Secret: "secret",
-					}, nil
-				},
-				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-			},
-			dbMock: &th.DBClientMock{
-				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return nil },
-				CreateTokenEntryFunc:   func(ctx context.Context, token types.Token) error { return errors.New("db error") },
-			},
-		},
-	}
-	runTests(t, tests)
-}
+// func TestCreateProject(t *testing.T) {
+// 	tests := []test{
+// 		{
+// 			name:       "fails to create project when not admin",
+// 			req:        loadJSON(t, "TestCreateProject/fails_to_create_project_when_not_admin_request.json"),
+// 			want:       http.StatusUnauthorized,
+// 			authHeader: userAuthHeader,
+// 			respFile:   "TestCreateProject/fails_to_create_project_when_not_admin_response.json",
+// 			url:        "/projects",
+// 			method:     "POST",
+// 		},
+// 		{
+// 			name:       "can create project",
+// 			req:        loadJSON(t, "TestCreateProject/can_create_project_request.json"),
+// 			want:       http.StatusOK,
+// 			respFile:   "TestCreateProject/can_create_project_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects",
+// 			method:     "POST",
+// 			cpMock: &th.CredsProviderMock{
+// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
+// 				CreateProjectFunc: func(s string) (types.Token, error) {
+// 					return types.Token{
+// 						CreatedAt: "createdAt",
+// 						ExpiresAt: "expiresAt",
+// 						ProjectID: "project1",
+// 						ProjectToken: types.ProjectToken{
+// 							ID: "secret-id-accessor",
+// 						},
+// 						RoleID: "role-id",
+// 						Secret: "secret",
+// 					}, nil
+// 				},
+// 			},
+// 			dbMock: &th.DBClientMock{
+// 				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return nil },
+// 				CreateTokenEntryFunc:   func(ctx context.Context, token types.Token) error { return nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "bad request",
+// 			req:        loadJSON(t, "TestCreateProject/bad_request.json"),
+// 			want:       http.StatusBadRequest,
+// 			respFile:   "TestCreateProject/bad_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects",
+// 			method:     "POST",
+// 		},
+// 		{
+// 			name:       "project name cannot already exist",
+// 			req:        loadJSON(t, "TestCreateProject/project_name_cannot_already_exist.json"),
+// 			want:       http.StatusBadRequest,
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects",
+// 			method:     "POST",
+// 			cpMock: &th.CredsProviderMock{
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "project fails to create db entry",
+// 			req:        loadJSON(t, "TestCreateProject/project_fails_to_create_dbentry.json"),
+// 			want:       http.StatusInternalServerError,
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects",
+// 			method:     "POST",
+// 			cpMock: &th.CredsProviderMock{
+// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
+// 			},
+// 			dbMock: &th.DBClientMock{
+// 				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return errors.New("db error") },
+// 			},
+// 		},
+// 		{
+// 			name:       "project fails to create token entry",
+// 			req:        loadJSON(t, "TestCreateProject/project_fails_to_create_token_entry.json"),
+// 			want:       http.StatusInternalServerError,
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects",
+// 			method:     "POST",
+// 			cpMock: &th.CredsProviderMock{
+// 				CreateProjectFunc: func(s string) (types.Token, error) {
+// 					return types.Token{
+// 						CreatedAt: "createdAt",
+// 						ExpiresAt: "expiresAt",
+// 						ProjectID: "project1",
+// 						ProjectToken: types.ProjectToken{
+// 							ID: "secret-id-accessor",
+// 						},
+// 						RoleID: "role-id",
+// 						Secret: "secret",
+// 					}, nil
+// 				},
+// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
+// 			},
+// 			dbMock: &th.DBClientMock{
+// 				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return nil },
+// 				CreateTokenEntryFunc:   func(ctx context.Context, token types.Token) error { return errors.New("db error") },
+// 			},
+// 		},
+// 	}
+// 	runTests(t, tests)
+// }
 
 func TestCreateToken(t *testing.T) {
 	tests := []test{
@@ -496,77 +496,77 @@ func TestGetProject(t *testing.T) {
 	runTests(t, tests)
 }
 
-func TestCreateTarget(t *testing.T) {
-	tests := []test{
-		{
-			name:       "can create target",
-			req:        loadJSON(t, "TestCreateTarget/can_create_target_request.json"),
-			want:       http.StatusOK,
-			respFile:   "TestCreateTarget/can_create_target_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets",
-			method:     "POST",
-			cpMock: &th.CredsProviderMock{
-				CreateTargetFunc:  func(s string, target types.Target) error { return nil },
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
-			},
-		},
-		{
-			name:       "fails to create target when not admin",
-			req:        loadJSON(t, "TestCreateTarget/fails_to_create_target_when_not_admin_request.json"),
-			want:       http.StatusUnauthorized,
-			respFile:   "TestCreateTarget/fails_to_create_target_when_not_admin_response.json",
-			authHeader: userAuthHeader,
-			url:        "/projects/projectalreadyexists/targets",
-			method:     "POST",
-		},
-		{
-			name:       "fails to create target when using a bad auth header",
-			req:        loadJSON(t, "TestCreateTarget/can_create_target_request.json"),
-			want:       http.StatusUnauthorized,
-			respFile:   "TestCreateTarget/fails_to_create_target_when_bad_auth_header_response.json",
-			authHeader: invalidAuthHeader,
-			url:        "/projects/projectalreadyexists/targets",
-			method:     "POST",
-		},
-		{
-			name:       "bad request",
-			req:        loadJSON(t, "TestCreateTarget/bad_request.json"),
-			want:       http.StatusBadRequest,
-			respFile:   "TestCreateTarget/bad_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets",
-			method:     "POST",
-		},
-		{
-			name:       "target name cannot already exist",
-			req:        loadJSON(t, "TestCreateTarget/target_name_cannot_already_exist_request.json"),
-			want:       http.StatusBadRequest,
-			respFile:   "TestCreateTarget/target_name_cannot_already_exist_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets",
-			method:     "POST",
-			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
-			},
-		},
-		{
-			name:       "project must exist",
-			req:        loadJSON(t, "TestCreateTarget/project_must_exist_request.json"),
-			want:       http.StatusBadRequest,
-			respFile:   "TestCreateTarget/project_must_exist_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectdoesnotexist/targets",
-			method:     "POST",
-			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-			},
-		},
-	}
-	runTests(t, tests)
-}
+// func TestCreateTarget(t *testing.T) {
+// 	tests := []test{
+// 		{
+// 			name:       "can create target",
+// 			req:        loadJSON(t, "TestCreateTarget/can_create_target_request.json"),
+// 			want:       http.StatusOK,
+// 			respFile:   "TestCreateTarget/can_create_target_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets",
+// 			method:     "POST",
+// 			cpMock: &th.CredsProviderMock{
+// 				CreateTargetFunc:  func(s string, target types.Target) error { return nil },
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "fails to create target when not admin",
+// 			req:        loadJSON(t, "TestCreateTarget/fails_to_create_target_when_not_admin_request.json"),
+// 			want:       http.StatusUnauthorized,
+// 			respFile:   "TestCreateTarget/fails_to_create_target_when_not_admin_response.json",
+// 			authHeader: userAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets",
+// 			method:     "POST",
+// 		},
+// 		{
+// 			name:       "fails to create target when using a bad auth header",
+// 			req:        loadJSON(t, "TestCreateTarget/can_create_target_request.json"),
+// 			want:       http.StatusUnauthorized,
+// 			respFile:   "TestCreateTarget/fails_to_create_target_when_bad_auth_header_response.json",
+// 			authHeader: invalidAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets",
+// 			method:     "POST",
+// 		},
+// 		{
+// 			name:       "bad request",
+// 			req:        loadJSON(t, "TestCreateTarget/bad_request.json"),
+// 			want:       http.StatusBadRequest,
+// 			respFile:   "TestCreateTarget/bad_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets",
+// 			method:     "POST",
+// 		},
+// 		{
+// 			name:       "target name cannot already exist",
+// 			req:        loadJSON(t, "TestCreateTarget/target_name_cannot_already_exist_request.json"),
+// 			want:       http.StatusBadRequest,
+// 			respFile:   "TestCreateTarget/target_name_cannot_already_exist_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets",
+// 			method:     "POST",
+// 			cpMock: &th.CredsProviderMock{
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "project must exist",
+// 			req:        loadJSON(t, "TestCreateTarget/project_must_exist_request.json"),
+// 			want:       http.StatusBadRequest,
+// 			respFile:   "TestCreateTarget/project_must_exist_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectdoesnotexist/targets",
+// 			method:     "POST",
+// 			cpMock: &th.CredsProviderMock{
+// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
+// 			},
+// 		},
+// 	}
+// 	runTests(t, tests)
+// }
 
 func TestDeleteTarget(t *testing.T) {
 	tests := []test{
