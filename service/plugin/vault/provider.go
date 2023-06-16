@@ -572,29 +572,38 @@ func (v *VaultProvider) isAdmin() bool {
 	return v.roleID == authorizationKeyAdmin
 }
 
-func (v VaultProvider) ListTargets(project string) ([]string, error) {
-	if !v.isAdmin() {
-		return nil, errors.New("admin credentials must be used to list targets")
+func (v VaultProvider) ListTargets(args credentials.ListTargetsArgs) (credentials.ListTargetsResponse, error) {
+	projectName := args.ProjectName
+	resp := credentials.ListTargetsResponse{}
+
+	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	if err != nil {
+		return resp, err
 	}
 
-	sec, err := v.vaultLogicalSvc.List("aws/roles/")
+	if !svc.isAdmin() {
+		return resp, errors.New("admin credentials must be used to list targets")
+	}
+
+	sec, err := svc.vaultLogicalSvc.List("aws/roles/")
 	if err != nil {
-		return nil, fmt.Errorf("vault list error: %w", err)
+		return resp, fmt.Errorf("vault list error: %w", err)
 	}
 
 	// allow empty array to render json as []
-	list := make([]string, 0)
+	resp.Targets = []string{}
 	if sec != nil {
 		for _, target := range sec.Data["keys"].([]interface{}) {
 			value := target.(string)
-			prefix := fmt.Sprintf("argo-cloudops-projects-%s-target-", project)
+			prefix := fmt.Sprintf("argo-cloudops-projects-%s-target-", projectName)
 			if strings.HasPrefix(value, prefix) {
-				list = append(list, strings.Replace(value, prefix, "", 1))
+				// list = append(list, strings.Replace(value, prefix, "", 1))
+				resp.Targets = append(resp.Targets, strings.Replace(value, prefix, "", 1))
 			}
 		}
 	}
 
-	return list, nil
+	return resp, nil
 }
 
 func (v *VaultProvider) ProjectExists(args credentials.ProjectExistsArgs) (credentials.ProjectExistsResponse, error) {

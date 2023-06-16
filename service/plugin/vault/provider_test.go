@@ -193,6 +193,7 @@ func TestGetTarget(t *testing.T) {
 				}),
 			}
 
+			// TODO should this test the result?
 			_, err := v.GetTarget(credentials.GetTargetArgs{
 				ProjectName: "testProject",
 				TargetName:  "testTarget",
@@ -204,6 +205,80 @@ func TestGetTarget(t *testing.T) {
 			} else {
 				if tt.errResult {
 					t.Errorf("\nexpected error")
+				}
+			}
+		})
+	}
+}
+
+func TestVaultListTargets(t *testing.T) {
+	tests := []struct {
+		name  string
+		admin bool
+		// want         []string
+		want            credentials.ListTargetsResponse
+		expectedTargets []string
+		vaultErr        error
+		errResult       bool
+	}{
+		{
+			name:  "list target success",
+			admin: true,
+			want: credentials.ListTargetsResponse{
+				Targets: []string{"target1", "target2"},
+			},
+		},
+		{
+			name:      "list target admin error",
+			admin:     false,
+			errResult: true,
+		},
+		{
+			name:      "list target error",
+			admin:     true,
+			vaultErr:  errTest,
+			errResult: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			role := TestRole
+			if tt.admin {
+				role = authorizationKeyAdmin
+			}
+
+			var testTargets []interface{}
+			for _, i := range tt.want.Targets {
+				testTargets = append(testTargets, fmt.Sprintf("argo-cloudops-projects-test-target-%s", i))
+			}
+
+			v := VaultProvider{
+				roleID: role,
+				vaultSvcFn: mockVaultSvc(vaultSvc{
+					roleID: role,
+					vaultLogicalSvc: &mockVaultLogical{
+						err: tt.vaultErr,
+						data: map[string]interface{}{
+							"keys": testTargets,
+						},
+					},
+				}),
+			}
+
+			resp, err := v.ListTargets(credentials.ListTargetsArgs{
+				ProjectName: "test",
+			})
+			if err != nil {
+				if !tt.errResult {
+					t.Errorf("\ndid not expect error, got: %v", err)
+				}
+			} else {
+				if tt.errResult {
+					t.Errorf("\nexpected error")
+				}
+				if !cmp.Equal(resp, tt.want) {
+					t.Errorf("\nwant: %v\n got: %v", tt.want, resp)
 				}
 			}
 		})

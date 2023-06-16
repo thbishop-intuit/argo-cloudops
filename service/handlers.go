@@ -419,33 +419,62 @@ func (h handler) getTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-		return
+	credProvider := h.credentialsPlugins["vault"]
+	// cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
+	// if err != nil {
+	// 	level.Error(l).Log("message", "error creating credentials provider", "error", err)
+	// 	h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	targetExistsArgs := credentials.TargetExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   projectName,
+		TargetName:    targetName,
 	}
 
-	targetExists, err := cp.TargetExists(projectName, targetName)
+	targetExistResp, err := credProvider.TargetExists(targetExistsArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target", "error", err)
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
 
-	if !targetExists {
+	// targetExists, err := cp.TargetExists(projectName, targetName)
+	// if err != nil {
+	// 	level.Error(l).Log("message", "error retrieving target", "error", err)
+	// 	h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	if !targetExistResp.Exists {
 		level.Error(l).Log("message", "target not found")
 		h.errorResponse(w, "target not found", http.StatusNotFound)
 		return
 	}
 
 	level.Debug(l).Log("message", "getting target information")
-	targetInfo, err := cp.GetTarget(projectName, targetName)
+
+	getTargetArgs := credentials.GetTargetArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   projectName,
+		TargetName:    targetName,
+	}
+
+	targetInfo, err := credProvider.GetTarget(getTargetArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target information", "error", err)
 		h.errorResponse(w, "error retrieving target information", http.StatusInternalServerError)
-		return
+
 	}
+	// targetInfo, err := cp.GetTarget(projectName, targetName)
+	// if err != nil {
+	// 	level.Error(l).Log("message", "error retrieving target information", "error", err)
+	// 	h.errorResponse(w, "error retrieving target information", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	jsonResult, err := json.Marshal(targetInfo)
 	if err != nil {

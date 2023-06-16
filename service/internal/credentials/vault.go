@@ -591,12 +591,13 @@ type ProviderV2 interface {
 	// DeleteTarget(DeleteTargetArgs) (DeleteTargetResponse, error)
 	// GetProject(GetProjectArgs) (GetProjectResponse, error)
 	// GetProjectToken(GetProjectArgs) (GetProjectResponse, error)
-	// GetTarget(GetTargetArgs) (GetTargetResponse, error)
+	GetTarget(GetTargetArgs) (GetTargetResponse, error)
 	// GetToken(GetTokenArgs) (GetTokenResponse, error)
-	// ListTargets(ListTargetsArgs) (ListTargetsResponse, error)
+	ListTargets(ListTargetsArgs) (ListTargetsResponse, error)
 	ProjectExists(ProjectExistsArgs) (ProjectExistsResponse, error)
 	TargetExists(TargetExistsArgs) (TargetExistsResponse, error)
 	// UpdateTarget(UpdateTargetArgs) (UpdateTargetResponse, error)
+	// TODO make sure all V2 interface methods are implemented
 }
 
 // Here is an implementation that talks over RPC
