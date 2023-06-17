@@ -45,10 +45,16 @@ const (
 
 var (
 	// ErrNotFound conveys that the item was not found.
+	// TODO does this need to be elevated to a first class error that
+	// plugins can return?
 	ErrNotFound = errors.New("item not found")
 	// ErrTargetNotFound conveys that the target was not round.
+	// TODO does this need to be elevated to a first class error that
+	// plugins can return?
 	ErrTargetNotFound = errors.New("target not found")
 	// ErrProjectTokenNotFound conveys that the token was not found.
+	// TODO does this need to be elevated to a first class error that
+	// plugins can return?
 	ErrProjectTokenNotFound = errors.New("project token not found")
 )
 
@@ -458,8 +464,6 @@ func (v *VaultProvider) GetTarget(args credentials.GetTargetArgs) (credentials.G
 		return resp, err
 	}
 
-	println(fmt.Sprintf("creds: %+v", args.Authorization))
-
 	if !svc.isAdmin() {
 		return resp, errors.New("admin credentials must be used to get target information")
 	}
@@ -519,11 +523,19 @@ func (v *VaultProvider) DeleteProjectToken(projectName, tokenID string) error {
 	return nil
 }
 
-func (v *VaultProvider) GetProjectToken(projectName, tokenID string) (types.ProjectToken, error) {
-	token := types.ProjectToken{}
+func (v *VaultProvider) ProjectTokenExists(args credentials.ProjectTokenExistsArgs) (credentials.ProjectTokenExistsResponse, error) {
+	projectName := args.ProjectName
+	tokenID := args.TokenID
 
-	if !v.isAdmin() {
-		return token, errors.New("admin credentials must be used to delete tokens")
+	resp := credentials.ProjectTokenExistsResponse{}
+
+	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	if err != nil {
+		return resp, err
+	}
+
+	if !svc.isAdmin() {
+		return resp, errors.New("admin credentials must be used to get a token")
 	}
 
 	data := map[string]interface{}{
@@ -531,21 +543,20 @@ func (v *VaultProvider) GetProjectToken(projectName, tokenID string) (types.Proj
 	}
 
 	path := fmt.Sprintf("%s/secret-id-accessor/lookup", genProjectAppRole(projectName))
-	projectToken, err := v.vaultLogicalSvc.Write(path, data)
+	projectToken, err := svc.vaultLogicalSvc.Write(path, data)
 	if err != nil {
 		if !isSecretIDAccessorExists(err) {
-			return token, ErrProjectTokenNotFound
+			resp.Exists = false
+			return resp, nil
 		}
-		return token, fmt.Errorf("vault get secret ID accessor error: %w", err)
+		return resp, fmt.Errorf("vault get secret ID accessor error: %w", err)
 	}
 
-	if projectToken == nil {
-		return token, nil
-	}
+	// TODO not sure why this would be nil. this was carried over from old
+	// code.
+	resp.Exists = projectToken != nil
 
-	return types.ProjectToken{
-		ID: projectToken.Data["secret_id_accessor"].(string),
-	}, nil
+	return resp, nil
 }
 
 func (v *VaultProvider) GetToken() (string, error) {

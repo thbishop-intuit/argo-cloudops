@@ -338,6 +338,88 @@ func TestVaultProjectExists(t *testing.T) {
 	}
 }
 
+func TestVaultProjectTokenExists(t *testing.T) {
+	tests := []struct {
+		name          string
+		admin         bool
+		want          credentials.ProjectTokenExistsResponse
+		mockVaultData map[string]interface{}
+		vaultErr      error
+		errResult     bool
+	}{
+		{
+			name:  "exists",
+			admin: true,
+			want: credentials.ProjectTokenExistsResponse{
+				Exists: true,
+			},
+			mockVaultData: map[string]interface{}{
+				"creation_time":      "2022-06-21T14:43:16.172896-07:00",
+				"expiration_time":    "2023-06-21T14:43:16.172896-07:00",
+				"secret_id_accessor": "secret-id-accessor",
+			},
+		},
+		{
+			name:  "does not exist",
+			admin: true,
+			want: credentials.ProjectTokenExistsResponse{
+				Exists: false,
+			},
+			vaultErr:      fmt.Errorf("failed to find accessor entry for secret_id_accessor"),
+			errResult:     false,
+			mockVaultData: map[string]interface{}{},
+		},
+		{
+			name:          "error",
+			admin:         true,
+			vaultErr:      errTest,
+			errResult:     true,
+			mockVaultData: map[string]interface{}{},
+		},
+		{
+			name:      "not admin",
+			admin:     false,
+			errResult: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			role := TestRole
+			if tt.admin {
+				role = authorizationKeyAdmin
+			}
+			v := VaultProvider{
+				roleID: role,
+				vaultSvcFn: mockVaultSvc(vaultSvc{
+					roleID: role,
+					vaultLogicalSvc: &mockVaultLogical{
+						data: tt.mockVaultData,
+						err:  tt.vaultErr,
+					},
+				}),
+			}
+
+			resp, err := v.ProjectTokenExists(credentials.ProjectTokenExistsArgs{
+				ProjectName: "testProject",
+				TokenID:     "testToken",
+			})
+			if err != nil {
+				if !tt.errResult {
+					t.Errorf("\ndid not expect error, got: %v", err)
+				}
+			} else {
+				if tt.errResult {
+					t.Errorf("\nexpected error")
+				}
+				if !cmp.Equal(resp, tt.want) {
+					t.Errorf("\nwant: %v\n got: %v", tt.want, resp)
+				}
+			}
+		})
+	}
+}
+
 func mockVaultSvc(vSvc vaultSvc) func(auth credentials.Authorization, h http.Header) (vaultSvc, error) {
 	return func(auth credentials.Authorization, h http.Header) (vaultSvc, error) {
 		return vSvc, nil

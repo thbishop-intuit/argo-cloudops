@@ -590,8 +590,14 @@ type ProviderV2 interface {
 	// DeleteProjectToken(DeleteProjectArgs) (DeleteProjectResponse, error)
 	// DeleteTarget(DeleteTargetArgs) (DeleteTargetResponse, error)
 	// GetProject(GetProjectArgs) (GetProjectResponse, error)
-	// GetProjectToken(GetProjectArgs) (GetProjectResponse, error)
+	// This is used to check if a token exists in
+	// the backend. The current code uses
+	// GetProjectToken to achieve this, but
+	// doesn't do anything with the data.
+	ProjectTokenExists(ProjectTokenExistsArgs) (ProjectTokenExistsResponse, error)
 	GetTarget(GetTargetArgs) (GetTargetResponse, error)
+	// This is to get a token which can be
+	// exchanged for target credentials.
 	// GetToken(GetTokenArgs) (GetTokenResponse, error)
 	ListTargets(ListTargetsArgs) (ListTargetsResponse, error)
 	ProjectExists(ProjectExistsArgs) (ProjectExistsResponse, error)
@@ -681,16 +687,16 @@ type GetProjectResponse struct {
 	Project responses.GetProject // TODO change this type?
 }
 
-// GetProjectToken(string, string) (types.ProjectToken, error)
-type GetProjectTokenArgs struct {
+// ProjectTokenExists(string, string) (types.ProjectToken, error)
+type ProjectTokenExistsArgs struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 	TokenID       string // TODO correct?
 }
 
-type GetProjectTokenResponse struct {
-	Token types.ProjectToken
+type ProjectTokenExistsResponse struct {
+	Exists bool
 }
 
 // GetTarget(string, string) (types.Target, error)
@@ -819,10 +825,10 @@ func (g *ProviderV2RPCClient) GetProject(args GetProjectArgs) (GetProjectRespons
 	return resp, err
 }
 
-// GetProjectToken(projectName string, tokenID string) (types.ProjectToken, error)
-func (g *ProviderV2RPCClient) GetProjectToken(args GetProjectTokenArgs) (GetProjectTokenResponse, error) {
-	var resp GetProjectTokenResponse
-	err := g.client.Call("Plugin.GetProjectToken", args, &resp)
+// ProjectTokenExists(projectName string, tokenID string) (types.ProjectToken, error)
+func (g *ProviderV2RPCClient) ProjectTokenExists(args ProjectTokenExistsArgs) (ProjectTokenExistsResponse, error) {
+	var resp ProjectTokenExistsResponse
+	err := g.client.Call("Plugin.ProjectTokenExists", args, &resp)
 	return resp, err
 }
 
