@@ -148,6 +148,52 @@ func TestVaultCreateTarget(t *testing.T) {
 	}
 }
 
+func TestGetProject(t *testing.T) {
+	tests := []struct {
+		name      string
+		vaultErr  error
+		errResult bool
+	}{
+		{
+			name: "get project success",
+		},
+		{
+			name:      "get project error",
+			vaultErr:  errTest,
+			errResult: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			role := TestRole
+
+			v := VaultProvider{
+				roleID: role,
+				vaultSvcFn: mockVaultSvc(vaultSvc{
+					roleID:          role,
+					vaultLogicalSvc: &mockVaultLogical{err: tt.vaultErr},
+					vaultSysSvc:     &mockVaultSys{},
+				}),
+			}
+
+			// TODO should this test the result?
+			_, err := v.GetProject(credentials.GetProjectArgs{
+				ProjectName: "testProject",
+			})
+			if err != nil {
+				if !tt.errResult {
+					t.Errorf("\ndid not expect error, got: %v", err)
+				}
+			} else {
+				if tt.errResult {
+					t.Errorf("\nexpected error")
+				}
+			}
+		})
+	}
+}
+
 func TestGetTarget(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -213,9 +259,8 @@ func TestGetTarget(t *testing.T) {
 
 func TestVaultListTargets(t *testing.T) {
 	tests := []struct {
-		name  string
-		admin bool
-		// want         []string
+		name            string
+		admin           bool
 		want            credentials.ListTargetsResponse
 		expectedTargets []string
 		vaultErr        error

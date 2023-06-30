@@ -431,6 +431,7 @@ const (
 	vaultTokenNumUses = 3
 )
 
+// TODO this does not require admin credentials; should it?
 func (v *VaultProvider) GetProject(args credentials.GetProjectArgs) (credentials.GetProjectResponse, error) {
 	name := args.ProjectName
 	resp := credentials.GetProjectResponse{}

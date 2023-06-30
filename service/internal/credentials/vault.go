@@ -589,15 +589,17 @@ type ProviderV2 interface {
 	// DeleteProject(DeleteProjectArgs) (DeleteProjectResponse, error)
 	// DeleteProjectToken(DeleteProjectArgs) (DeleteProjectResponse, error)
 	// DeleteTarget(DeleteTargetArgs) (DeleteTargetResponse, error)
-	// GetProject(GetProjectArgs) (GetProjectResponse, error)
+	GetProject(GetProjectArgs) (GetProjectResponse, error)
+
 	// This is used to check if a token exists in
-	// the backend. The current code uses
-	// GetProjectToken to achieve this, but
-	// doesn't do anything with the data.
+	// the backend. The current implementation uses GetProjectToken to achieve
+	// this, but doesn't do anything with the data. GetProjectToken could be an
+	// internal implementation detail (instead of being part of the interface/a
+	// public method).
 	ProjectTokenExists(ProjectTokenExistsArgs) (ProjectTokenExistsResponse, error)
 	GetTarget(GetTargetArgs) (GetTargetResponse, error)
-	// This is to get a token which can be
-	// exchanged for target credentials.
+
+	// This is to get a token which can be exchanged for target credentials.
 	// GetToken(GetTokenArgs) (GetTokenResponse, error)
 	ListTargets(ListTargetsArgs) (ListTargetsResponse, error)
 	ProjectExists(ProjectExistsArgs) (ProjectExistsResponse, error)
