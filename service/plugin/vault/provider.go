@@ -424,7 +424,7 @@ func (v *VaultProvider) DeleteTarget(args credentials.DeleteTargetArgs) (credent
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to create project")
+		return resp, errors.New("admin credentials must be used to delete targets")
 	}
 
 	path := fmt.Sprintf("aws/roles/%s-%s-target-%s", vaultProjectPrefix, projectName, targetName)
@@ -718,21 +718,30 @@ func (v *VaultProvider) TargetExists(args credentials.TargetExistsArgs) (credent
 }
 
 // UpdateTarget updates a targets policies for the project.
-func (v *VaultProvider) UpdateTarget(projectName string, target types.Target) error {
-	if !v.isAdmin() {
-		return errors.New("admin credentials must be used to update target")
+func (v *VaultProvider) UpdateTarget(args credentials.UpdateTargetArgs) (credentials.UpdateTargetResponse, error) {
+	resp := credentials.UpdateTargetResponse{}
+	projectName := args.ProjectName
+	targetName := args.Target.Name
+
+	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	if err != nil {
+		return resp, err
+	}
+
+	if !svc.isAdmin() {
+		return resp, errors.New("admin credentials must be used to update targets")
 	}
 
 	options := map[string]interface{}{
-		"credential_type": target.Properties.CredentialType,
-		"policy_arns":     target.Properties.PolicyArns,
-		"policy_document": target.Properties.PolicyDocument,
-		"role_arns":       target.Properties.RoleArn,
+		"credential_type": args.Target.Properties.CredentialType,
+		"policy_arns":     args.Target.Properties.PolicyArns,
+		"policy_document": args.Target.Properties.PolicyDocument,
+		"role_arns":       args.Target.Properties.RoleArn,
 	}
 
-	path := fmt.Sprintf("aws/roles/%s-%s-target-%s", vaultProjectPrefix, projectName, target.Name)
-	_, err := v.vaultLogicalSvc.Write(path, options)
-	return err
+	path := fmt.Sprintf("aws/roles/%s-%s-target-%s", vaultProjectPrefix, projectName, targetName)
+	_, err = svc.vaultLogicalSvc.Write(path, options)
+	return resp, err
 }
 
 // func (v *VaultProvider) writeProjectState(name string) error {

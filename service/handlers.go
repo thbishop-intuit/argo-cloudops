@@ -609,12 +609,6 @@ func (h handler) createProject(w http.ResponseWriter, r *http.Request) {
 	// TODO better way to do this?
 	credProvider := h.credentialsPlugins["vault"]
 
-	// cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	// if err != nil {
-	// 	level.Error(l).Log("message", "error creating credentials provider", "error", err)
-	// 	h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-	// 	return
-	// }
 	projExistArgs := credentials.ProjectExistsArgs{
 		Authorization: *a,
 		Headers:       r.Header,
@@ -628,14 +622,6 @@ func (h handler) createProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// projectExists, err := cp.ProjectExists(capp.Name)
-	// if err != nil {
-	// 	level.Error(l).Log("message", "error checking project", "error", err)
-	// 	h.errorResponse(w, "error checking project", http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// if projectExists {
 	if projExistResp.Exists {
 		level.Error(l).Log("error", "project already exists")
 		h.errorResponse(w, "project already exists", http.StatusBadRequest)
@@ -1029,45 +1015,60 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
+	credProvider := h.credentialsPlugins["vault"]
+
+	projExistArgs := credentials.ProjectExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   projectName,
+	}
+
+	projExistResp, err := credProvider.ProjectExists(projExistArgs)
 	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
+		level.Error(l).Log("message", "error checking project", "error", err)
+		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	projectExists, err := cp.ProjectExists(projectName)
-	if err != nil {
-		level.Error(l).Log("message", "error determining if project exists", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-		return
-	}
-
-	if !projectExists {
+	// TODO Perhaps this should be 404
+	if projExistResp.Exists {
 		level.Error(l).Log("message", "project does not exist")
 		h.errorResponse(w, "project does not exist", http.StatusNotFound)
 		return
 	}
 
-	targetExists, err := cp.TargetExists(projectName, targetName)
+	targetExistsArgs := credentials.TargetExistsArgs{
+		ProjectName: projectName,
+		TargetName:  targetName,
+	}
+
+	targetExistsResp, err := credProvider.TargetExists(targetExistsArgs)
+
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target", "error", err)
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
-	if !targetExists {
+
+	if !targetExistsResp.Exists {
 		level.Error(l).Log("message", "target not found")
 		h.errorResponse(w, "target not found", http.StatusNotFound)
 		return
 	}
 
-	target, err := cp.GetTarget(projectName, targetName)
+	getTargetArgs := credentials.GetTargetArgs{
+		ProjectName: projectName,
+		TargetName:  targetName,
+	}
+
+	getTargetResp, err := credProvider.GetTarget(getTargetArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving existing target")
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
-	targetType := target.Type
+
+	targetType := getTargetResp.Target.Type
 
 	level.Debug(l).Log("message", "reading request body")
 	reqBody, err := io.ReadAll(r.Body)
@@ -1078,30 +1079,36 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// merge request data into existing target struct for update data
-	if err := json.Unmarshal(reqBody, &target); err != nil {
+	// TODO we're currently just overwriting. do we need to do something different now?
+	if err := json.Unmarshal(reqBody, &getTargetResp.Target); err != nil {
 		level.Error(l).Log("message", "error reading target properties data", "error", err)
 		h.errorResponse(w, "error reading target properties data", http.StatusInternalServerError)
 		return
 	}
 	// overwrite updated target with existing target name and type values so request body doesn't overwrite these values
-	target.Name = targetName
-	target.Type = targetType
+	getTargetResp.Target.Name = targetName
+	getTargetResp.Target.Type = targetType
 
-	if err := target.Validate(); err != nil {
+	if err := getTargetResp.Target.Validate(); err != nil {
 		level.Error(l).Log("message", "error invalid request", "error", err)
 		h.errorResponse(w, fmt.Sprintf("invalid request, %s", err), http.StatusBadRequest)
 		return
 	}
 
 	level.Debug(l).Log("message", "updating target")
-	err = cp.UpdateTarget(projectName, target)
+	updateTargetArgs := credentials.UpdateTargetArgs{
+		ProjectName: projectName,
+		Target:      getTargetResp.Target,
+	}
+
+	_, err = credProvider.UpdateTarget(updateTargetArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error updating target", "error", err)
 		h.errorResponse(w, "error updating target", http.StatusInternalServerError)
 		return
 	}
 
-	data, err := json.Marshal(target)
+	data, err := json.Marshal(getTargetResp.Target)
 	if err != nil {
 		level.Error(l).Log("message", "error creating response", "error", err)
 		h.errorResponse(w, "error creating response object", http.StatusInternalServerError)

@@ -604,7 +604,7 @@ type ProviderV2 interface {
 	ListTargets(ListTargetsArgs) (ListTargetsResponse, error)
 	ProjectExists(ProjectExistsArgs) (ProjectExistsResponse, error)
 	TargetExists(TargetExistsArgs) (TargetExistsResponse, error)
-	// UpdateTarget(UpdateTargetArgs) (UpdateTargetResponse, error)
+	UpdateTarget(UpdateTargetArgs) (UpdateTargetResponse, error)
 	// TODO make sure all V2 interface methods are implemented
 }
 
@@ -876,8 +876,10 @@ func (g *ProviderV2RPCClient) TargetExists(args TargetExistsArgs) (TargetExistsR
 
 // UpdateTarget(projectName string, targetName types.Target) error
 // TODO
-func (g *ProviderV2RPCClient) UpdateTarget(args UpdateTargetArgs) error {
-	return g.client.Call("Plugin.UpdateTarget", args, nil)
+func (g *ProviderV2RPCClient) UpdateTarget(args UpdateTargetArgs) (UpdateTargetResponse, error) {
+	var resp UpdateTargetResponse
+	err := g.client.Call("Plugin.UpdateTarget", args, &resp)
+	return resp, err
 }
 
 // Previous implementation

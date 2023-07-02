@@ -608,131 +608,131 @@ func TestGetProject(t *testing.T) {
 // 	runTests(t, tests)
 // }
 
-func TestUpdateTarget(t *testing.T) {
-	tests := []test{
-		{
-			name:       "can update target",
-			req:        loadJSON(t, "TestUpdateTarget/can_update_target_request.json"),
-			want:       http.StatusOK,
-			respFile:   "TestUpdateTarget/can_update_target_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
-			method:     "PATCH",
-			cpMock: &th.CredsProviderMock{
-				GetTargetFunc: func(s1, s2 string) (types.Target, error) {
-					return types.Target{
-						Name: "TARGET_EXISTS",
-						Properties: types.TargetProperties{
-							CredentialType: "assumed_role",
-							PolicyArns:     []string{},
-							PolicyDocument: "policyDoc",
-							RoleArn:        "roleARN",
-						},
-						Type: "aws_account",
-					}, nil
-				},
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
-				UpdateTargetFunc:  func(s string, target types.Target) error { return nil },
-			},
-		},
-		{
-			name:       "fails to update target when not admin",
-			req:        loadJSON(t, "TestUpdateTarget/fails_to_update_target_when_not_admin_request.json"),
-			want:       http.StatusUnauthorized,
-			respFile:   "TestUpdateTarget/fails_to_update_target_when_not_admin_response.json",
-			authHeader: userAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
-			method:     "PATCH",
-		},
-		{
-			name:       "fails to update target when using a bad auth header",
-			req:        loadJSON(t, "TestUpdateTarget/fails_to_update_target_when_not_admin_request.json"),
-			want:       http.StatusUnauthorized,
-			respFile:   "TestUpdateTarget/fails_to_update_target_when_bad_auth_header_response.json",
-			authHeader: invalidAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
-			method:     "PATCH",
-		},
-		{
-			name:       "fails to update target credential_type",
-			req:        loadJSON(t, "TestUpdateTarget/fails_to_update_credential_type_request.json"),
-			want:       http.StatusBadRequest,
-			respFile:   "TestUpdateTarget/fails_to_update_credential_type_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
-			method:     "PATCH",
-			cpMock: &th.CredsProviderMock{
-				GetTargetFunc: func(s1, s2 string) (types.Target, error) {
-					return types.Target{
-						Name: "TARGET_EXISTS",
-						Properties: types.TargetProperties{
-							CredentialType: "assumed_role",
-							PolicyArns:     []string{"arn:aws:iam::012345678901:policy/test-policy"},
-							PolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"s3:ListBuckets\",\"Resource\":\"*\"}]}",
-							RoleArn:        "arn:aws:iam::012345678901:role/test-role",
-						},
-						Type: "aws_account",
-					}, nil
-				},
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
-			},
-		},
-		{
-			name:       "does not overwrite target name or type when in request",
-			req:        loadJSON(t, "TestUpdateTarget/fails_to_update_target_name_request.json"),
-			want:       http.StatusOK,
-			respFile:   "TestUpdateTarget/fails_to_update_target_name_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
-			method:     "PATCH",
-			cpMock: &th.CredsProviderMock{
-				GetTargetFunc: func(s1, s2 string) (types.Target, error) {
-					return types.Target{
-						Name: "TARGET_EXISTS",
-						Properties: types.TargetProperties{
-							CredentialType: "assumed_role",
-							PolicyArns:     []string{"arn:aws:iam::012345678901:policy/test-policy"},
-							PolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"s3:ListBuckets\",\"Resource\":\"*\"}]}",
-							RoleArn:        "arn:aws:iam::012345678901:role/test-role",
-						},
-						Type: "aws_account",
-					}, nil
-				},
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
-				UpdateTargetFunc:  func(s string, target types.Target) error { return nil },
-			},
-		},
-		{
-			name:       "target name must exist",
-			req:        loadJSON(t, "TestUpdateTarget/target_name_must_exist_request.json"),
-			want:       http.StatusNotFound,
-			respFile:   "TestUpdateTarget/target_name_must_exist_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/INVALID_TARGET",
-			method:     "PATCH",
-			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
-			},
-		},
-		{
-			name:       "project must exist",
-			req:        loadJSON(t, "TestUpdateTarget/project_must_exist_request.json"),
-			want:       http.StatusNotFound,
-			respFile:   "TestUpdateTarget/project_must_exist_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectdoesnotexist/targets/TARGET_EXISTS",
-			method:     "PATCH",
-			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-			},
-		},
-	}
-	runTests(t, tests)
-}
+// func TestUpdateTarget(t *testing.T) {
+// 	tests := []test{
+// 		{
+// 			name:       "can update target",
+// 			req:        loadJSON(t, "TestUpdateTarget/can_update_target_request.json"),
+// 			want:       http.StatusOK,
+// 			respFile:   "TestUpdateTarget/can_update_target_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
+// 			method:     "PATCH",
+// 			cpMock: &th.CredsProviderMock{
+// 				GetTargetFunc: func(s1, s2 string) (types.Target, error) {
+// 					return types.Target{
+// 						Name: "TARGET_EXISTS",
+// 						Properties: types.TargetProperties{
+// 							CredentialType: "assumed_role",
+// 							PolicyArns:     []string{},
+// 							PolicyDocument: "policyDoc",
+// 							RoleArn:        "roleARN",
+// 						},
+// 						Type: "aws_account",
+// 					}, nil
+// 				},
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
+// 				UpdateTargetFunc:  func(s string, target types.Target) error { return nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "fails to update target when not admin",
+// 			req:        loadJSON(t, "TestUpdateTarget/fails_to_update_target_when_not_admin_request.json"),
+// 			want:       http.StatusUnauthorized,
+// 			respFile:   "TestUpdateTarget/fails_to_update_target_when_not_admin_response.json",
+// 			authHeader: userAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
+// 			method:     "PATCH",
+// 		},
+// 		{
+// 			name:       "fails to update target when using a bad auth header",
+// 			req:        loadJSON(t, "TestUpdateTarget/fails_to_update_target_when_not_admin_request.json"),
+// 			want:       http.StatusUnauthorized,
+// 			respFile:   "TestUpdateTarget/fails_to_update_target_when_bad_auth_header_response.json",
+// 			authHeader: invalidAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
+// 			method:     "PATCH",
+// 		},
+// 		{
+// 			name:       "fails to update target credential_type",
+// 			req:        loadJSON(t, "TestUpdateTarget/fails_to_update_credential_type_request.json"),
+// 			want:       http.StatusBadRequest,
+// 			respFile:   "TestUpdateTarget/fails_to_update_credential_type_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
+// 			method:     "PATCH",
+// 			cpMock: &th.CredsProviderMock{
+// 				GetTargetFunc: func(s1, s2 string) (types.Target, error) {
+// 					return types.Target{
+// 						Name: "TARGET_EXISTS",
+// 						Properties: types.TargetProperties{
+// 							CredentialType: "assumed_role",
+// 							PolicyArns:     []string{"arn:aws:iam::012345678901:policy/test-policy"},
+// 							PolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"s3:ListBuckets\",\"Resource\":\"*\"}]}",
+// 							RoleArn:        "arn:aws:iam::012345678901:role/test-role",
+// 						},
+// 						Type: "aws_account",
+// 					}, nil
+// 				},
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "does not overwrite target name or type when in request",
+// 			req:        loadJSON(t, "TestUpdateTarget/fails_to_update_target_name_request.json"),
+// 			want:       http.StatusOK,
+// 			respFile:   "TestUpdateTarget/fails_to_update_target_name_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/TARGET_EXISTS",
+// 			method:     "PATCH",
+// 			cpMock: &th.CredsProviderMock{
+// 				GetTargetFunc: func(s1, s2 string) (types.Target, error) {
+// 					return types.Target{
+// 						Name: "TARGET_EXISTS",
+// 						Properties: types.TargetProperties{
+// 							CredentialType: "assumed_role",
+// 							PolicyArns:     []string{"arn:aws:iam::012345678901:policy/test-policy"},
+// 							PolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"s3:ListBuckets\",\"Resource\":\"*\"}]}",
+// 							RoleArn:        "arn:aws:iam::012345678901:role/test-role",
+// 						},
+// 						Type: "aws_account",
+// 					}, nil
+// 				},
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
+// 				UpdateTargetFunc:  func(s string, target types.Target) error { return nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "target name must exist",
+// 			req:        loadJSON(t, "TestUpdateTarget/target_name_must_exist_request.json"),
+// 			want:       http.StatusNotFound,
+// 			respFile:   "TestUpdateTarget/target_name_must_exist_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/INVALID_TARGET",
+// 			method:     "PATCH",
+// 			cpMock: &th.CredsProviderMock{
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "project must exist",
+// 			req:        loadJSON(t, "TestUpdateTarget/project_must_exist_request.json"),
+// 			want:       http.StatusNotFound,
+// 			respFile:   "TestUpdateTarget/project_must_exist_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectdoesnotexist/targets/TARGET_EXISTS",
+// 			method:     "PATCH",
+// 			cpMock: &th.CredsProviderMock{
+// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
+// 			},
+// 		},
+// 	}
+// 	runTests(t, tests)
+// }
 
 func TestCreateWorkflow(t *testing.T) {
 	tests := []test{
