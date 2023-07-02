@@ -1144,24 +1144,40 @@ func (h handler) deleteToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-		return
-	}
+	// TODO better way to do this?
+	credProvider := h.credentialsPlugins["vault"]
 
 	ctx := r.Context()
 
 	level.Debug(l).Log("message", "checking if project exists")
-	projectExists, err := h.projectExists(ctx, l, cp, w, projectName)
+	projExistArgs := credentials.ProjectExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   projectName,
+	}
 
-	if err != nil || !projectExists {
+	projExistResp, err := credProvider.ProjectExists(projExistArgs)
+	if err != nil {
+		level.Error(l).Log("message", "error checking project", "error", err)
+		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
+		return
+	}
+
+	if !projExistResp.Exists {
+		// TODO should be a warn?
+		level.Error(l).Log("error", "project does not exist")
 		return
 	}
 
 	// check if token exists in CP and DB
-	projectToken, err := cp.GetProjectToken(projectName, tokenID)
+	projTokenExistsArgs := credentials.ProjectTokenExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   projectName,
+		TokenID:       tokenID,
+	}
+
+	projTokenExistsResp, err := credProvider.ProjectTokenExists(projTokenExistsArgs)
 	if err != nil {
 		// do not return an error if project token is not found
 		if !errors.Is(err, credentials.ErrProjectTokenNotFound) {
@@ -1195,9 +1211,16 @@ func (h handler) deleteToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// only delete token if exists in CP
-	if !projectToken.IsEmpty() {
+	if projTokenExistsResp.Exists {
 		level.Debug(l).Log("message", "deleting token from credentials provider")
-		if err = cp.DeleteProjectToken(projectName, tokenID); err != nil {
+		deleteProjTokenArgs := credentials.DeleteProjectTokenArgs{
+			Authorization: *a,
+			Headers:       r.Header,
+			ProjectName:   projectName,
+			TokenID:       tokenID,
+		}
+
+		if _, err := credProvider.DeleteProjectToken(deleteProjTokenArgs); err != nil {
 			level.Error(l).Log("message", "error deleting token from credentials provider", "error", err)
 			h.errorResponse(w, "error deleting token", http.StatusInternalServerError)
 			return

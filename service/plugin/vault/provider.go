@@ -506,9 +506,18 @@ func (v *VaultProvider) GetTarget(args credentials.GetTargetArgs) (credentials.G
 	return resp, nil
 }
 
-func (v *VaultProvider) DeleteProjectToken(projectName, tokenID string) error {
-	if !v.isAdmin() {
-		return errors.New("admin credentials must be used to delete tokens")
+func (v *VaultProvider) DeleteProjectToken(args credentials.DeleteProjectTokenArgs) (credentials.DeleteProjectTokenResponse, error) {
+	projectName := args.ProjectName
+	tokenID := args.TokenID
+	resp := credentials.DeleteProjectTokenResponse{}
+
+	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	if err != nil {
+		return resp, err
+	}
+
+	if !svc.isAdmin() {
+		return resp, errors.New("admin credentials must be used to delete tokens")
 	}
 
 	data := map[string]interface{}{
@@ -516,12 +525,12 @@ func (v *VaultProvider) DeleteProjectToken(projectName, tokenID string) error {
 	}
 
 	path := fmt.Sprintf("%s/secret-id-accessor/destroy", genProjectAppRole(projectName))
-	_, err := v.vaultLogicalSvc.Write(path, data)
+	_, err = v.vaultLogicalSvc.Write(path, data)
 	if err != nil {
-		return err
+		return resp, err
 	}
 
-	return nil
+	return resp, nil
 }
 
 func (v *VaultProvider) ProjectTokenExists(args credentials.ProjectTokenExistsArgs) (credentials.ProjectTokenExistsResponse, error) {

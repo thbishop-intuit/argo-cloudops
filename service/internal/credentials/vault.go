@@ -587,7 +587,7 @@ type ProviderV2 interface {
 	CreateTarget(CreateTargetArgs) (CreateTargetResponse, error)
 	CreateToken(CreateTokenArgs) (CreateTokenResponse, error)
 	// DeleteProject(DeleteProjectArgs) (DeleteProjectResponse, error)
-	// DeleteProjectToken(DeleteProjectArgs) (DeleteProjectResponse, error)
+	DeleteProjectToken(DeleteProjectTokenArgs) (DeleteProjectTokenResponse, error)
 	// DeleteTarget(DeleteTargetArgs) (DeleteTargetResponse, error)
 	GetProject(GetProjectArgs) (GetProjectResponse, error)
 
@@ -810,8 +810,10 @@ func (g *ProviderV2RPCClient) DeleteProject(args DeleteProjectArgs) error {
 
 // DeleteProjectToken(projectName string, tokenID string) error
 // TODO
-func (g *ProviderV2RPCClient) DeleteProjectToken(args DeleteProjectTokenArgs) error {
-	return g.client.Call("Plugin.DeleteProjectToken", args, nil)
+func (g *ProviderV2RPCClient) DeleteProjectToken(args DeleteProjectTokenArgs) (DeleteProjectTokenResponse, error) {
+	var resp DeleteProjectTokenResponse
+	err := g.client.Call("Plugin.DeleteProjectToken", args, &resp)
+	return resp, err
 }
 
 // DeleteTarget(projectName string, targetName string) error
