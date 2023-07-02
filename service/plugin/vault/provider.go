@@ -413,14 +413,23 @@ func (v *VaultProvider) DeleteProject(name string) error {
 	return nil
 }
 
-func (v *VaultProvider) DeleteTarget(projectName string, targetName string) error {
-	if !v.isAdmin() {
-		return errors.New("admin credentials must be used to delete target")
+func (v *VaultProvider) DeleteTarget(args credentials.DeleteTargetArgs) (credentials.DeleteTargetResponse, error) {
+	projectName := args.ProjectName
+	targetName := args.ProjectName
+	resp := credentials.DeleteTargetResponse{}
+
+	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	if err != nil {
+		return resp, err
+	}
+
+	if !svc.isAdmin() {
+		return resp, errors.New("admin credentials must be used to create project")
 	}
 
 	path := fmt.Sprintf("aws/roles/%s-%s-target-%s", vaultProjectPrefix, projectName, targetName)
-	_, err := v.vaultLogicalSvc.Delete(path)
-	return err
+	_, err = svc.vaultLogicalSvc.Delete(path)
+	return resp, err
 }
 
 const (

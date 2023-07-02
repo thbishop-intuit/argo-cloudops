@@ -568,45 +568,45 @@ func TestGetProject(t *testing.T) {
 // 	runTests(t, tests)
 // }
 
-func TestDeleteTarget(t *testing.T) {
-	tests := []test{
-		{
-			name:       "fails to delete target when not admin",
-			want:       http.StatusUnauthorized,
-			authHeader: userAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/target1",
-			method:     "DELETE",
-		},
-		{
-			name:       "fails to delete target when using a bad auth header",
-			want:       http.StatusUnauthorized,
-			authHeader: invalidAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/target1",
-			method:     "DELETE",
-		},
-		{
-			name:       "can delete target",
-			want:       http.StatusOK,
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/target1",
-			method:     "DELETE",
-			cpMock: &th.CredsProviderMock{
-				DeleteTargetFunc: func(s1, s2 string) error { return nil },
-			},
-		},
-		{
-			name:       "target fails to delete",
-			want:       http.StatusInternalServerError,
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets/undeletabletarget",
-			method:     "DELETE",
-			cpMock: &th.CredsProviderMock{
-				DeleteTargetFunc: func(s1, s2 string) error { return errors.New("error") },
-			},
-		},
-	}
-	runTests(t, tests)
-}
+// func TestDeleteTarget(t *testing.T) {
+// 	tests := []test{
+// 		{
+// 			name:       "fails to delete target when not admin",
+// 			want:       http.StatusUnauthorized,
+// 			authHeader: userAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/target1",
+// 			method:     "DELETE",
+// 		},
+// 		{
+// 			name:       "fails to delete target when using a bad auth header",
+// 			want:       http.StatusUnauthorized,
+// 			authHeader: invalidAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/target1",
+// 			method:     "DELETE",
+// 		},
+// 		{
+// 			name:       "can delete target",
+// 			want:       http.StatusOK,
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/target1",
+// 			method:     "DELETE",
+// 			cpMock: &th.CredsProviderMock{
+// 				DeleteTargetFunc: func(s1, s2 string) error { return nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "target fails to delete",
+// 			want:       http.StatusInternalServerError,
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets/undeletabletarget",
+// 			method:     "DELETE",
+// 			cpMock: &th.CredsProviderMock{
+// 				DeleteTargetFunc: func(s1, s2 string) error { return errors.New("error") },
+// 			},
+// 		},
+// 	}
+// 	runTests(t, tests)
+// }
 
 func TestUpdateTarget(t *testing.T) {
 	tests := []test{

@@ -148,6 +148,61 @@ func TestVaultCreateTarget(t *testing.T) {
 	}
 }
 
+func TestVaultDeleteTarget(t *testing.T) {
+	tests := []struct {
+		name      string
+		admin     bool
+		vaultErr  error
+		errResult bool
+	}{
+		{
+			name:  "delete target success",
+			admin: true,
+		},
+		{
+			name:      "delete target admin error",
+			admin:     false,
+			errResult: true,
+		},
+		{
+			name:      "delete target error",
+			admin:     true,
+			vaultErr:  errTest,
+			errResult: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			role := TestRole
+			if tt.admin {
+				role = authorizationKeyAdmin
+			}
+
+			v := VaultProvider{
+				roleID: role,
+				vaultSvcFn: mockVaultSvc(vaultSvc{
+					roleID:          role,
+					vaultLogicalSvc: &mockVaultLogical{err: tt.vaultErr},
+				}),
+			}
+
+			_, err := v.DeleteTarget(credentials.DeleteTargetArgs{
+				ProjectName: "testProject",
+				TargetName:  "testTarget",
+			})
+			if err != nil {
+				if !tt.errResult {
+					t.Errorf("\ndid not expect error, got: %v", err)
+				}
+			} else {
+				if tt.errResult {
+					t.Errorf("\nexpected error")
+				}
+			}
+		})
+	}
+}
 func TestGetProject(t *testing.T) {
 	tests := []struct {
 		name      string

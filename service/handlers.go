@@ -854,13 +854,6 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	level.Debug(l).Log("message", "creating credential provider")
 	credProvider := h.credentialsPlugins["vault"]
 
-	// cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	// if err != nil {
-	// 	level.Error(l).Log("message", "error creating credentials provider", "error", err)
-	// 	h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-	// 	return
-	// }
-
 	projExistArgs := credentials.ProjectExistsArgs{
 		Authorization: *a,
 		Headers:       r.Header,
@@ -874,13 +867,7 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// projectExists, err := cp.ProjectExists(projectName)
-	// if err != nil {
-	// 	level.Error(l).Log("message", "error determining if project exists", "error", err)
-	// }
-
 	// TODO Perhaps this should be 404
-	// if !projectExists {
 	if projExistResp.Exists {
 		level.Error(l).Log("message", "project does not exist")
 		h.errorResponse(w, "project does not exist", http.StatusBadRequest)
@@ -946,15 +933,16 @@ func (h handler) deleteTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-		return
-	}
+	credProvider := h.credentialsPlugins["vault"]
 
 	level.Debug(l).Log("message", "deleting target")
-	err = cp.DeleteTarget(projectName, targetName)
+	deleteTargetArgs := credentials.DeleteTargetArgs{
+		ProjectName: projectName,
+		TargetName:  targetName,
+	}
+
+	// TODO don't need the response?
+	_, err = credProvider.DeleteTarget(deleteTargetArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error deleting target", "error", err)
 		h.errorResponse(w, "error deleting target", http.StatusInternalServerError)

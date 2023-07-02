@@ -588,7 +588,7 @@ type ProviderV2 interface {
 	CreateToken(CreateTokenArgs) (CreateTokenResponse, error)
 	// DeleteProject(DeleteProjectArgs) (DeleteProjectResponse, error)
 	DeleteProjectToken(DeleteProjectTokenArgs) (DeleteProjectTokenResponse, error)
-	// DeleteTarget(DeleteTargetArgs) (DeleteTargetResponse, error)
+	DeleteTarget(DeleteTargetArgs) (DeleteTargetResponse, error)
 	GetProject(GetProjectArgs) (GetProjectResponse, error)
 
 	// This is used to check if a token exists in
@@ -818,8 +818,10 @@ func (g *ProviderV2RPCClient) DeleteProjectToken(args DeleteProjectTokenArgs) (D
 
 // DeleteTarget(projectName string, targetName string) error
 // TODO
-func (g *ProviderV2RPCClient) DeleteTarget(args DeleteTargetArgs) error {
-	return g.client.Call("Plugin.DeleteTarget", args, nil)
+func (g *ProviderV2RPCClient) DeleteTarget(args DeleteTargetArgs) (DeleteTargetResponse, error) {
+	var resp DeleteTargetResponse
+	err := g.client.Call("Plugin.DeleteTarget", args, &resp)
+	return resp, err
 }
 
 // GetProject(name string) (responses.GetProject, error)
