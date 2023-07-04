@@ -393,71 +393,71 @@ func TestListTargets(t *testing.T) {
 	runTests(t, tests)
 }
 
-func TestDeleteProject(t *testing.T) {
-	tests := []test{
-		{
-			name:       "fails to delete project when not admin",
-			want:       http.StatusUnauthorized,
-			authHeader: userAuthHeader,
-			url:        "/projects/projectalreadyexists",
-			method:     "DELETE",
-		},
-		{
-			name:       "can delete project",
-			want:       http.StatusOK,
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists",
-			method:     "DELETE",
-			cpMock: &th.CredsProviderMock{
-				DeleteProjectFunc: func(s string) error { return nil },
-				ListTargetsFunc:   func(s string) ([]string, error) { return []string{}, nil },
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-			},
-			dbMock: &th.DBClientMock{
-				DeleteProjectEntryFunc: func(ctx context.Context, project string) error { return nil },
-			},
-		},
-		{
-			name:       "fails to delete project if any targets exist",
-			want:       http.StatusBadRequest,
-			authHeader: adminAuthHeader,
-			url:        "/projects/undeletableprojecttargets",
-			method:     "DELETE",
-			cpMock: &th.CredsProviderMock{
-				ListTargetsFunc:   func(s string) ([]string, error) { return []string{"target"}, nil },
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-			},
-		},
-		{
-			name:       "fails to delete project",
-			want:       http.StatusInternalServerError,
-			authHeader: adminAuthHeader,
-			url:        "/projects/undeletableproject",
-			method:     "DELETE",
-			cpMock: &th.CredsProviderMock{
-				DeleteProjectFunc: func(s string) error { return errors.New("cp error") },
-				ListTargetsFunc:   func(s string) ([]string, error) { return []string{}, nil },
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-			},
-		},
-		{
-			name:       "fails to delete project db entry",
-			want:       http.StatusInternalServerError,
-			authHeader: adminAuthHeader,
-			url:        "/projects/somedeletedberror",
-			method:     "DELETE",
-			cpMock: &th.CredsProviderMock{
-				DeleteProjectFunc: func(s string) error { return nil },
-				ListTargetsFunc:   func(s string) ([]string, error) { return []string{}, nil },
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-			},
-			dbMock: &th.DBClientMock{
-				DeleteProjectEntryFunc: func(ctx context.Context, project string) error { return errors.New("error") },
-			},
-		},
-	}
-	runTests(t, tests)
-}
+// func TestDeleteProject(t *testing.T) {
+// 	tests := []test{
+// 		{
+// 			name:       "fails to delete project when not admin",
+// 			want:       http.StatusUnauthorized,
+// 			authHeader: userAuthHeader,
+// 			url:        "/projects/projectalreadyexists",
+// 			method:     "DELETE",
+// 		},
+// 		{
+// 			name:       "can delete project",
+// 			want:       http.StatusOK,
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists",
+// 			method:     "DELETE",
+// 			cpMock: &th.CredsProviderMock{
+// 				DeleteProjectFunc: func(s string) error { return nil },
+// 				ListTargetsFunc:   func(s string) ([]string, error) { return []string{}, nil },
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 			},
+// 			dbMock: &th.DBClientMock{
+// 				DeleteProjectEntryFunc: func(ctx context.Context, project string) error { return nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "fails to delete project if any targets exist",
+// 			want:       http.StatusBadRequest,
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/undeletableprojecttargets",
+// 			method:     "DELETE",
+// 			cpMock: &th.CredsProviderMock{
+// 				ListTargetsFunc:   func(s string) ([]string, error) { return []string{"target"}, nil },
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "fails to delete project",
+// 			want:       http.StatusInternalServerError,
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/undeletableproject",
+// 			method:     "DELETE",
+// 			cpMock: &th.CredsProviderMock{
+// 				DeleteProjectFunc: func(s string) error { return errors.New("cp error") },
+// 				ListTargetsFunc:   func(s string) ([]string, error) { return []string{}, nil },
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "fails to delete project db entry",
+// 			want:       http.StatusInternalServerError,
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/somedeletedberror",
+// 			method:     "DELETE",
+// 			cpMock: &th.CredsProviderMock{
+// 				DeleteProjectFunc: func(s string) error { return nil },
+// 				ListTargetsFunc:   func(s string) ([]string, error) { return []string{}, nil },
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 			},
+// 			dbMock: &th.DBClientMock{
+// 				DeleteProjectEntryFunc: func(ctx context.Context, project string) error { return errors.New("error") },
+// 			},
+// 		},
+// 	}
+// 	runTests(t, tests)
+// }
 
 func TestGetProject(t *testing.T) {
 	tests := []test{

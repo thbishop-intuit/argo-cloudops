@@ -393,24 +393,28 @@ func defaultVaultReadonlyPolicyAWS(projectName string) string {
 	)
 }
 
-func (v *VaultProvider) deletePolicyState(name string) error {
-	return v.vaultSysSvc.DeletePolicy(fmt.Sprintf("%s-%s", vaultProjectPrefix, name))
-}
+func (v *VaultProvider) DeleteProject(args credentials.DeleteProjectArgs) (credentials.DeleteProjectResponse, error) {
+	resp := credentials.DeleteProjectResponse{}
+	projectName := args.ProjectName
 
-func (v *VaultProvider) DeleteProject(name string) error {
-	if !v.isAdmin() {
-		return errors.New("admin credentials must be used to delete project")
-	}
-
-	err := v.deletePolicyState(name)
+	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
 	if err != nil {
-		return fmt.Errorf("vault delete project error: %w", err)
+		return resp, err
 	}
 
-	if _, err = v.vaultLogicalSvc.Delete(genProjectAppRole(name)); err != nil {
-		return fmt.Errorf("vault delete project error: %w", err)
+	if !svc.isAdmin() {
+		return resp, errors.New("admin credentials must be used to delete projects")
 	}
-	return nil
+
+	if err := svc.vaultSysSvc.DeletePolicy(fmt.Sprintf("%s-%s", vaultProjectPrefix, projectName)); err != nil {
+		return resp, fmt.Errorf("vault delete project error: %w", err)
+	}
+
+	if _, err = svc.vaultLogicalSvc.Delete(genProjectAppRole(projectName)); err != nil {
+		return resp, fmt.Errorf("vault delete project error: %w", err)
+	}
+
+	return resp, nil
 }
 
 func (v *VaultProvider) DeleteTarget(args credentials.DeleteTargetArgs) (credentials.DeleteTargetResponse, error) {

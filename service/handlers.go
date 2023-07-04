@@ -746,42 +746,51 @@ func (h handler) deleteProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-		return
-	}
+	credProvider := h.credentialsPlugins["vault"]
 
 	level.Debug(l).Log("message", "checking if project exists")
-	projectExists, err := cp.ProjectExists(projectName)
+	projExistArgs := credentials.ProjectExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   projectName,
+	}
+
+	projExistResp, err := credProvider.ProjectExists(projExistArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	if !projectExists {
+	if !projExistResp.Exists {
 		level.Debug(l).Log("message", "no action required because project does not exist")
 		return
 	}
 
 	level.Debug(l).Log("message", "getting all targets in project")
-	targets, err := cp.ListTargets(projectName)
+	listTargetsArgs := credentials.ListTargetsArgs{
+		ProjectName: projectName,
+	}
+
+	listTargetsResp, err := credProvider.ListTargets(listTargetsArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error getting all targets", "error", err)
 		h.errorResponse(w, "error getting all targets", http.StatusInternalServerError)
 		return
 	}
 
-	if len(targets) > 0 {
+	if len(listTargetsResp.Targets) > 0 {
 		level.Error(l).Log("error", "project has existing targets, not deleting")
 		h.errorResponse(w, "project has existing targets, not deleting", http.StatusBadRequest)
 		return
 	}
 
 	level.Debug(l).Log("message", "deleting project")
-	err = cp.DeleteProject(projectName)
+	deleteProjectArgs := credentials.DeleteProjectArgs{
+		ProjectName: projectName,
+	}
+
+	_, err = credProvider.DeleteProject(deleteProjectArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error deleting project", "error", err)
 		h.errorResponse(w, "error deleting project", http.StatusInternalServerError)
