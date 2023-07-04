@@ -631,7 +631,6 @@ func (v VaultProvider) ListTargets(args credentials.ListTargetsArgs) (credential
 			value := target.(string)
 			prefix := fmt.Sprintf("argo-cloudops-projects-%s-target-", projectName)
 			if strings.HasPrefix(value, prefix) {
-				// list = append(list, strings.Replace(value, prefix, "", 1))
 				resp.Targets = append(resp.Targets, strings.Replace(value, prefix, "", 1))
 			}
 		}

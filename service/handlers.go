@@ -965,35 +965,36 @@ func (h handler) listTargets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-		return
-	}
+	credProvider := h.credentialsPlugins["vault"]
 
 	level.Debug(l).Log("message", "checking if project exists")
-	projectExists, err := cp.ProjectExists(projectName)
+	projExistArgs := credentials.ProjectExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   projectName,
+	}
+
+	projExistResp, err := credProvider.ProjectExists(projExistArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	if !projectExists {
+	if !projExistResp.Exists {
 		level.Debug(l).Log("message", "project does not exist")
 		h.errorResponse(w, "project does not exist", http.StatusNotFound)
 		return
 	}
 
-	targets, err := cp.ListTargets(projectName)
-	if err != nil {
-		level.Error(l).Log("message", "error listing targets", "error", err)
-		h.errorResponse(w, "error listing targets", http.StatusInternalServerError)
-		return
+	level.Debug(l).Log("message", "getting all targets in project")
+	listTargetsArgs := credentials.ListTargetsArgs{
+		ProjectName: projectName,
 	}
 
-	data, err := json.Marshal(targets)
+	listTargetsResp, err := credProvider.ListTargets(listTargetsArgs)
+
+	data, err := json.Marshal(listTargetsResp.Targets)
 	if err != nil {
 		level.Error(l).Log("message", "error serializing targets", "error", err)
 		h.errorResponse(w, "error listing targets", http.StatusInternalServerError)

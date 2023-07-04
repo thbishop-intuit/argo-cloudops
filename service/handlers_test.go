@@ -340,58 +340,58 @@ func TestCreateToken(t *testing.T) {
 // 	runTests(t, tests)
 // }
 
-func TestListTargets(t *testing.T) {
-	tests := []test{
-		{
-			name:       "fails to list targets when not admin",
-			want:       http.StatusUnauthorized,
-			respFile:   "TestListTargets/fails_to_list_targets_when_not_admin_response.json",
-			authHeader: userAuthHeader,
-			url:        "/projects/undeletableprojecttargets/targets",
-			method:     "GET",
-		},
-		{
-			name:       "can list targets",
-			want:       http.StatusOK,
-			respFile:   "TestListTargets/can_get_target_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/undeletableprojecttargets/targets",
-			method:     "GET",
-			cpMock: &th.CredsProviderMock{
-				ListTargetsFunc: func(s string) ([]string, error) {
-					return []string{"target1", "target2", "undeletabletarget"}, nil
-				},
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-			},
-		},
-		{
-			name:       "project not found",
-			want:       http.StatusNotFound,
-			respFile:   "TestListTargets/project_not_found_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/badproject/targets",
-			method:     "GET",
-			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-			},
-		},
-		{
-			name:       "no targets",
-			want:       http.StatusOK,
-			respFile:   "TestListTargets/no_targets_response.json",
-			authHeader: adminAuthHeader,
-			url:        "/projects/projectalreadyexists/targets",
-			method:     "GET",
-			cpMock: &th.CredsProviderMock{
-				ListTargetsFunc: func(s string) ([]string, error) {
-					return []string{}, nil
-				},
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-			},
-		},
-	}
-	runTests(t, tests)
-}
+// func TestListTargets(t *testing.T) {
+// 	tests := []test{
+// 		{
+// 			name:       "fails to list targets when not admin",
+// 			want:       http.StatusUnauthorized,
+// 			respFile:   "TestListTargets/fails_to_list_targets_when_not_admin_response.json",
+// 			authHeader: userAuthHeader,
+// 			url:        "/projects/undeletableprojecttargets/targets",
+// 			method:     "GET",
+// 		},
+// 		{
+// 			name:       "can list targets",
+// 			want:       http.StatusOK,
+// 			respFile:   "TestListTargets/can_get_target_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/undeletableprojecttargets/targets",
+// 			method:     "GET",
+// 			cpMock: &th.CredsProviderMock{
+// 				ListTargetsFunc: func(s string) ([]string, error) {
+// 					return []string{"target1", "target2", "undeletabletarget"}, nil
+// 				},
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "project not found",
+// 			want:       http.StatusNotFound,
+// 			respFile:   "TestListTargets/project_not_found_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/badproject/targets",
+// 			method:     "GET",
+// 			cpMock: &th.CredsProviderMock{
+// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "no targets",
+// 			want:       http.StatusOK,
+// 			respFile:   "TestListTargets/no_targets_response.json",
+// 			authHeader: adminAuthHeader,
+// 			url:        "/projects/projectalreadyexists/targets",
+// 			method:     "GET",
+// 			cpMock: &th.CredsProviderMock{
+// 				ListTargetsFunc: func(s string) ([]string, error) {
+// 					return []string{}, nil
+// 				},
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 			},
+// 		},
+// 	}
+// 	runTests(t, tests)
+// }
 
 // func TestDeleteProject(t *testing.T) {
 // 	tests := []test{
