@@ -51,15 +51,15 @@ func generateErrorResponseJSON(message string) string {
 
 // HTTP handler
 type handler struct {
-	logger                 log.Logger
-	newCredentialsProvider func(a credentials.Authorization, env env.Vars, h http.Header, vaultConfig credentials.VaultConfigFn, fn credentials.VaultSvcFn) (credentials.Provider, error)
-	argo                   workflow.Workflow
-	argoCtx                context.Context
-	config                 *Config
-	gitClient              git.Client
-	env                    env.Vars
-	dbClient               db.Client
-	credentialsPlugins     map[string]credentials.ProviderV2
+	logger log.Logger
+	// newCredentialsProvider func(a credentials.Authorization, env env.Vars, h http.Header, vaultConfig credentials.VaultConfigFn, fn credentials.VaultSvcFn) (credentials.Provider, error)
+	argo               workflow.Workflow
+	argoCtx            context.Context
+	config             *Config
+	gitClient          git.Client
+	env                env.Vars
+	dbClient           db.Client
+	credentialsPlugins map[string]credentials.ProviderV2
 }
 
 // Service HealthCheck

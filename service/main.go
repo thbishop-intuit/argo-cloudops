@@ -111,15 +111,15 @@ func main() {
 	// nil errors will occur. Mux sets its params in context, so passing the Argo Workflow context to
 	// setupRouter and applying it to the request will wipe out Mux vars (or any other data Mux sets in its context).
 	h := handler{
-		logger:                 logger,
-		newCredentialsProvider: credentials.NewVaultProvider,
-		argo:                   workflow.NewArgoWorkflow(argoClient.NewWorkflowServiceClient(), env.ArgoNamespace),
-		argoCtx:                argoCtx,
-		config:                 config,
-		gitClient:              gitClient(env, errLogger),
-		env:                    env,
-		dbClient:               dbClient,
-		credentialsPlugins:     credPluginsClients,
+		logger: logger,
+		// newCredentialsProvider: credentials.NewVaultProvider,
+		argo:               workflow.NewArgoWorkflow(argoClient.NewWorkflowServiceClient(), env.ArgoNamespace),
+		argoCtx:            argoCtx,
+		config:             config,
+		gitClient:          gitClient(env, errLogger),
+		env:                env,
+		dbClient:           dbClient,
+		credentialsPlugins: credPluginsClients,
 	}
 
 	// pluginMap is the map of plugins we can dispense.

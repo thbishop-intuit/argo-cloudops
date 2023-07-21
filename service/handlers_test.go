@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cello-proj/cello/service/internal/credentials"
 	"github.com/cello-proj/cello/service/internal/db"
 	"github.com/cello-proj/cello/service/internal/env"
 	"github.com/cello-proj/cello/service/internal/workflow"
@@ -1371,16 +1370,16 @@ func runTests(t *testing.T, tests []test) {
 				panic(fmt.Sprintf("Unable to load config %s", err))
 			}
 
-			defaultCP := func(a credentials.Authorization, env env.Vars, h http.Header, f credentials.VaultConfigFn, fn credentials.VaultSvcFn) (credentials.Provider, error) {
-				return &th.CredsProviderMock{}, nil
-			}
+			// defaultCP := func(a credentials.Authorization, env env.Vars, h http.Header, f credentials.VaultConfigFn, fn credentials.VaultSvcFn) (credentials.Provider, error) {
+			// 	return &th.CredsProviderMock{}, nil
+			// }
 
 			h := handler{
-				logger:                 log.NewNopLogger(),
-				newCredentialsProvider: defaultCP,
-				argoCtx:                context.Background(),
-				config:                 config,
-				gitClient:              &th.GitClientMock{},
+				logger: log.NewNopLogger(),
+				// newCredentialsProvider: defaultCP,
+				argoCtx:   context.Background(),
+				config:    config,
+				gitClient: &th.GitClientMock{},
 				env: env.Vars{
 					AdminSecret: testPassword,
 				},
@@ -1390,13 +1389,13 @@ func runTests(t *testing.T, tests []test) {
 				h.dbClient = tt.dbMock
 			}
 
-			if tt.cpMock != nil {
-				mockCP := func(a credentials.Authorization, env env.Vars, h http.Header, f credentials.VaultConfigFn, fn credentials.VaultSvcFn) (credentials.Provider, error) {
-					return tt.cpMock, nil
-				}
+			// if tt.cpMock != nil {
+			// 	mockCP := func(a credentials.Authorization, env env.Vars, h http.Header, f credentials.VaultConfigFn, fn credentials.VaultSvcFn) (credentials.Provider, error) {
+			// 		return tt.cpMock, nil
+			// 	}
 
-				h.newCredentialsProvider = mockCP
-			}
+			// 	h.newCredentialsProvider = mockCP
+			// }
 
 			if tt.gitMock != nil {
 				h.gitClient = tt.gitMock
