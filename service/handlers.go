@@ -297,45 +297,63 @@ func (h handler) createWorkflowFromRequest(_ context.Context, w http.ResponseWri
 	}
 
 	level.Debug(l).Log("message", "creating new credentials provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	if err != nil {
-		level.Error(l).Log("message", "bad or unknown credentials provider", "error", err)
-		h.errorResponse(w, "bad or unknown credentials provider", http.StatusInternalServerError)
-		return
-	}
+	credProvider := h.credentialsPlugins["vault"]
 
 	level.Debug(l).Log("message", "getting credentials provider token")
-	credentialsToken, err := cp.GetToken()
+	getTokenArgs := credentials.GetTokenArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+	}
+
+	// TODO should we check project and token exists first?
+	getTokenResp, err := credProvider.GetToken(getTokenArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error getting credentials provider token", "error", err)
 		h.errorResponse(w, "error retrieving credentials provider token", http.StatusInternalServerError)
 		return
 	}
 
-	projectExists, err := cp.ProjectExists(cwr.ProjectName)
+	projectExistsArgs := credentials.ProjectExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   cwr.ProjectName,
+	}
+
+	// TODO why doesn't this use our handler helper 'projectExists'?
+	projectExistsResp, err := credProvider.ProjectExists(projectExistsArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	if !projectExists {
+	if !projectExistsResp.Exists {
 		level.Error(l).Log("message", "project does not exist", "error", err)
 		h.errorResponse(w, "project does not exist", http.StatusBadRequest)
 		return
 	}
 
-	targetExists, err := cp.TargetExists(cwr.ProjectName, cwr.TargetName)
+	targetExistArgs := credentials.TargetExistsArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   cwr.ProjectName,
+		TargetName:    cwr.TargetName,
+	}
+
+	targetExistsResp, err := credProvider.TargetExists(targetExistArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target", "error", err)
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
-	if !targetExists {
+
+	if !targetExistsResp.Exists {
 		level.Error(l).Log("message", "target not found")
 		h.errorResponse(w, "target not found", http.StatusBadRequest)
 		return
 	}
+
+	credentialsToken := getTokenResp.Token
 
 	level.Debug(l).Log("message", "creating workflow parameters")
 	parameters := workflow.NewParameters(environmentVariablesString, executeCommand, executeContainerImageURI, cwr.TargetName, cwr.ProjectName, cwr.Parameters, credentialsToken)
@@ -538,6 +556,7 @@ func newCelloToken(provider string, tok types.Token) *token {
 // projectExists checks if a project exists using both the credential provider and database
 func (h handler) projectExists(ctx context.Context, l log.Logger, cp credentials.Provider, w http.ResponseWriter, projectName string) (bool, error) {
 	// Checking credential provider
+	// TODO update
 	level.Debug(l).Log("message", "checking if project exists")
 	projectExists, err := cp.ProjectExists(projectName)
 	if err != nil {
@@ -874,7 +893,7 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   ctr.Name,
-		TargetName:    ctr.Name,
+		TargetName:    ctr.Name, // TODO is this correct? shouldn't be name?
 	}
 
 	targetExistsResp, err := credProvider.TargetExists(targetExistArgs)

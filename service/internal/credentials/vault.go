@@ -600,7 +600,7 @@ type ProviderV2 interface {
 	GetTarget(GetTargetArgs) (GetTargetResponse, error)
 
 	// This is to get a token which can be exchanged for target credentials.
-	// GetToken(GetTokenArgs) (GetTokenResponse, error)
+	GetToken(GetTokenArgs) (GetTokenResponse, error)
 	ListTargets(ListTargetsArgs) (ListTargetsResponse, error)
 	ProjectExists(ProjectExistsArgs) (ProjectExistsResponse, error)
 	TargetExists(TargetExistsArgs) (TargetExistsResponse, error)
@@ -717,11 +717,13 @@ type GetTargetResponse struct {
 type GetTokenArgs struct {
 	Authorization Authorization
 	Headers       http.Header
-	// TODO correct?
+	// TODO correct? should we also take a
+	// project/target? maybe requires changes in
+	// our router/handler?
 }
 
 type GetTokenResponse struct {
-	TokenID string // TODO correct?
+	Token string // TODO correct? should just be the token value?
 }
 
 // ListTargets(string) ([]string, error)

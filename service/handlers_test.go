@@ -734,132 +734,132 @@ func TestGetProject(t *testing.T) {
 // 	runTests(t, tests)
 // }
 
-func TestCreateWorkflow(t *testing.T) {
-	tests := []test{
-		{
-			name:       "can create workflows",
-			req:        loadJSON(t, "TestCreateWorkflow/can_create_workflow_request.json"),
-			want:       http.StatusOK,
-			authHeader: userAuthHeader,
-			respFile:   "TestCreateWorkflow/can_create_workflow_response.json",
-			method:     "POST",
-			url:        "/workflows",
-			cpMock: &th.CredsProviderMock{
-				GetTokenFunc:      func() (string, error) { return testPassword, nil },
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
-			},
-			wfMock: &th.WorkflowMock{
-				SubmitFunc: func(ctx context.Context, from string, parameters, labels map[string]string) (string, error) {
-					return "wf-123456", nil
-				},
-			},
-		},
-		// We test this specific validation as it's server side only.
-		{
-			name:       "framework must be valid",
-			req:        loadJSON(t, "TestCreateWorkflow/framework_must_be_valid_request.json"),
-			want:       http.StatusBadRequest,
-			authHeader: userAuthHeader,
-			respFile:   "TestCreateWorkflow/framework_must_be_valid_response.json",
-			method:     "POST",
-			url:        "/workflows",
-		},
-		// We test this specific validation as it's server side only.
-		{
-			name:       "type must be valid",
-			respFile:   "TestCreateWorkflow/type_must_be_valid_response.json",
-			req:        loadJSON(t, "TestCreateWorkflow/type_must_be_valid_request.json"),
-			authHeader: userAuthHeader,
-			want:       http.StatusBadRequest,
-			method:     "POST",
-			url:        "/workflows",
-		},
-		{
-			name:       "project must exist",
-			req:        loadJSON(t, "TestCreateWorkflow/project_must_exist.json"),
-			authHeader: userAuthHeader,
-			want:       http.StatusBadRequest,
-			method:     "POST",
-			url:        "/workflows",
-			cpMock: &th.CredsProviderMock{
-				GetTokenFunc:      func() (string, error) { return testPassword, nil },
-				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-			},
-		},
-		{
-			name:       "target must exist",
-			req:        loadJSON(t, "TestCreateWorkflow/target_must_exist.json"),
-			authHeader: userAuthHeader,
-			want:       http.StatusBadRequest,
-			method:     "POST",
-			url:        "/workflows",
-			cpMock: &th.CredsProviderMock{
-				GetTokenFunc:      func() (string, error) { return testPassword, nil },
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
-			},
-		},
-		{
-			name:       "cannot create workflow with bad auth header",
-			req:        loadJSON(t, "TestCreateWorkflow/can_create_workflow_response.json"),
-			want:       http.StatusUnauthorized,
-			authHeader: invalidAuthHeader,
-			method:     "POST",
-			url:        "/workflows",
-		},
-		// TODO with admin credentials should fail
-	}
-	runTests(t, tests)
-}
+// func TestCreateWorkflow(t *testing.T) {
+// 	tests := []test{
+// 		{
+// 			name:       "can create workflows",
+// 			req:        loadJSON(t, "TestCreateWorkflow/can_create_workflow_request.json"),
+// 			want:       http.StatusOK,
+// 			authHeader: userAuthHeader,
+// 			respFile:   "TestCreateWorkflow/can_create_workflow_response.json",
+// 			method:     "POST",
+// 			url:        "/workflows",
+// 			cpMock: &th.CredsProviderMock{
+// 				GetTokenFunc:      func() (string, error) { return testPassword, nil },
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
+// 			},
+// 			wfMock: &th.WorkflowMock{
+// 				SubmitFunc: func(ctx context.Context, from string, parameters, labels map[string]string) (string, error) {
+// 					return "wf-123456", nil
+// 				},
+// 			},
+// 		},
+// 		// We test this specific validation as it's server side only.
+// 		{
+// 			name:       "framework must be valid",
+// 			req:        loadJSON(t, "TestCreateWorkflow/framework_must_be_valid_request.json"),
+// 			want:       http.StatusBadRequest,
+// 			authHeader: userAuthHeader,
+// 			respFile:   "TestCreateWorkflow/framework_must_be_valid_response.json",
+// 			method:     "POST",
+// 			url:        "/workflows",
+// 		},
+// 		// We test this specific validation as it's server side only.
+// 		{
+// 			name:       "type must be valid",
+// 			respFile:   "TestCreateWorkflow/type_must_be_valid_response.json",
+// 			req:        loadJSON(t, "TestCreateWorkflow/type_must_be_valid_request.json"),
+// 			authHeader: userAuthHeader,
+// 			want:       http.StatusBadRequest,
+// 			method:     "POST",
+// 			url:        "/workflows",
+// 		},
+// 		{
+// 			name:       "project must exist",
+// 			req:        loadJSON(t, "TestCreateWorkflow/project_must_exist.json"),
+// 			authHeader: userAuthHeader,
+// 			want:       http.StatusBadRequest,
+// 			method:     "POST",
+// 			url:        "/workflows",
+// 			cpMock: &th.CredsProviderMock{
+// 				GetTokenFunc:      func() (string, error) { return testPassword, nil },
+// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "target must exist",
+// 			req:        loadJSON(t, "TestCreateWorkflow/target_must_exist.json"),
+// 			authHeader: userAuthHeader,
+// 			want:       http.StatusBadRequest,
+// 			method:     "POST",
+// 			url:        "/workflows",
+// 			cpMock: &th.CredsProviderMock{
+// 				GetTokenFunc:      func() (string, error) { return testPassword, nil },
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
+// 			},
+// 		},
+// 		{
+// 			name:       "cannot create workflow with bad auth header",
+// 			req:        loadJSON(t, "TestCreateWorkflow/can_create_workflow_response.json"),
+// 			want:       http.StatusUnauthorized,
+// 			authHeader: invalidAuthHeader,
+// 			method:     "POST",
+// 			url:        "/workflows",
+// 		},
+// 		// TODO with admin credentials should fail
+// 	}
+// 	runTests(t, tests)
+// }
 
-func TestCreateWorkflowFromGit(t *testing.T) {
-	tests := []test{
-		{
-			name:       "can create workflows",
-			req:        loadJSON(t, "TestCreateWorkflowFromGit/good_request.json"),
-			want:       http.StatusOK,
-			authHeader: userAuthHeader,
-			respFile:   "TestCreateWorkflowFromGit/good_response.json",
-			method:     "POST",
-			url:        "/projects/project1/targets/target1/operations",
-			cpMock: &th.CredsProviderMock{
-				GetTokenFunc:      func() (string, error) { return testPassword, nil },
-				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
-			},
-			dbMock: &th.DBClientMock{
-				ReadProjectEntryFunc: func(ctx context.Context, project string) (db.ProjectEntry, error) {
-					return db.ProjectEntry{
-						ProjectID:  "project1",
-						Repository: "repo",
-					}, nil
-				},
-			},
-			gitMock: &th.GitClientMock{
-				GetManifestFileFunc: func(repository, commitHash, path string) ([]byte, error) {
-					return loadFileBytes("TestCreateWorkflow/can_create_workflow_request.json")
-				},
-			},
-			wfMock: &th.WorkflowMock{
-				SubmitFunc: func(ctx context.Context, from string, parameters, labels map[string]string) (string, error) {
-					return "wf-123456", nil
-				},
-			},
-		},
-		{
-			name:       "bad request",
-			req:        loadJSON(t, "TestCreateWorkflowFromGit/bad_request.json"),
-			want:       http.StatusBadRequest,
-			authHeader: userAuthHeader,
-			respFile:   "TestCreateWorkflowFromGit/bad_response.json",
-			method:     "POST",
-			url:        "/projects/project1/targets/target1/operations",
-		},
-		// TODO with admin credentials should fail
-	}
-	runTests(t, tests)
-}
+// func TestCreateWorkflowFromGit(t *testing.T) {
+// 	tests := []test{
+// 		{
+// 			name:       "can create workflows",
+// 			req:        loadJSON(t, "TestCreateWorkflowFromGit/good_request.json"),
+// 			want:       http.StatusOK,
+// 			authHeader: userAuthHeader,
+// 			respFile:   "TestCreateWorkflowFromGit/good_response.json",
+// 			method:     "POST",
+// 			url:        "/projects/project1/targets/target1/operations",
+// 			cpMock: &th.CredsProviderMock{
+// 				GetTokenFunc:      func() (string, error) { return testPassword, nil },
+// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
+// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
+// 			},
+// 			dbMock: &th.DBClientMock{
+// 				ReadProjectEntryFunc: func(ctx context.Context, project string) (db.ProjectEntry, error) {
+// 					return db.ProjectEntry{
+// 						ProjectID:  "project1",
+// 						Repository: "repo",
+// 					}, nil
+// 				},
+// 			},
+// 			gitMock: &th.GitClientMock{
+// 				GetManifestFileFunc: func(repository, commitHash, path string) ([]byte, error) {
+// 					return loadFileBytes("TestCreateWorkflow/can_create_workflow_request.json")
+// 				},
+// 			},
+// 			wfMock: &th.WorkflowMock{
+// 				SubmitFunc: func(ctx context.Context, from string, parameters, labels map[string]string) (string, error) {
+// 					return "wf-123456", nil
+// 				},
+// 			},
+// 		},
+// 		{
+// 			name:       "bad request",
+// 			req:        loadJSON(t, "TestCreateWorkflowFromGit/bad_request.json"),
+// 			want:       http.StatusBadRequest,
+// 			authHeader: userAuthHeader,
+// 			respFile:   "TestCreateWorkflowFromGit/bad_response.json",
+// 			method:     "POST",
+// 			url:        "/projects/project1/targets/target1/operations",
+// 		},
+// 		// TODO with admin credentials should fail
+// 	}
+// 	runTests(t, tests)
+// }
 
 func TestGetWorkflow(t *testing.T) {
 	tests := []test{

@@ -582,9 +582,16 @@ func (v *VaultProvider) ProjectTokenExists(args credentials.ProjectTokenExistsAr
 	return resp, nil
 }
 
-func (v *VaultProvider) GetToken() (string, error) {
-	if v.isAdmin() {
-		return "", errors.New("admin credentials cannot be used to get tokens")
+func (v *VaultProvider) GetToken(args credentials.GetTokenArgs) (credentials.GetTokenResponse, error) {
+	resp := credentials.GetTokenResponse{}
+
+	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	if err != nil {
+		return resp, err
+	}
+
+	if svc.isAdmin() {
+		return resp, errors.New("admin credentials cannot be used to get tokens")
 	}
 
 	options := map[string]interface{}{
@@ -592,13 +599,14 @@ func (v *VaultProvider) GetToken() (string, error) {
 		"secret_id": v.secretID,
 	}
 
-	sec, err := v.vaultLogicalSvc.Write("auth/approle/login", options)
+	sec, err := svc.vaultLogicalSvc.Write("auth/approle/login", options)
 	if err != nil {
-		fmt.Println(err.Error())
-		return "", err
+		return resp, err
 	}
 
-	return sec.Auth.ClientToken, nil
+	resp.Token = sec.Auth.ClientToken
+
+	return resp, nil
 }
 
 // TODO See if this can be removed when refactoring auth.
