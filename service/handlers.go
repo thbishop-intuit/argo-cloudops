@@ -871,7 +871,7 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	projExistArgs := credentials.ProjectExistsArgs{
 		Authorization: *a,
 		Headers:       r.Header,
-		ProjectName:   ctr.Name,
+		ProjectName:   projectName,
 	}
 
 	projExistResp, err := credProvider.ProjectExists(projExistArgs)
@@ -892,8 +892,8 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	targetExistArgs := credentials.TargetExistsArgs{
 		Authorization: *a,
 		Headers:       r.Header,
-		ProjectName:   ctr.Name,
-		TargetName:    ctr.Name, // TODO is this correct? shouldn't be name?
+		ProjectName:   projectName,
+		TargetName:    ctr.Name,
 	}
 
 	targetExistsResp, err := credProvider.TargetExists(targetExistArgs)
