@@ -554,18 +554,25 @@ func newCelloToken(provider string, tok types.Token) *token {
 }
 
 // projectExists checks if a project exists using both the credential provider and database
-func (h handler) projectExists(ctx context.Context, l log.Logger, cp credentials.Provider, w http.ResponseWriter, projectName string) (bool, error) {
+// TODO refactor so all can use this helper?
+func (h handler) projectExists(ctx context.Context, l log.Logger, credProvider credentials.ProviderV2, auth *credentials.Authorization, headers http.Header, w http.ResponseWriter, projectName string) (bool, error) {
 	// Checking credential provider
-	// TODO update
 	level.Debug(l).Log("message", "checking if project exists")
-	projectExists, err := cp.ProjectExists(projectName)
+
+	projectExistsArgs := credentials.ProjectExistsArgs{
+		Authorization: *auth,
+		Headers:       headers,
+		ProjectName:   projectName,
+	}
+
+	projectExistsResp, err := credProvider.ProjectExists(projectExistsArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error checking credentials provider for project", "error", err)
 		h.errorResponse(w, "error retrieving project", http.StatusInternalServerError)
 		return false, err
 	}
 
-	if !projectExists {
+	if !projectExistsResp.Exists {
 		level.Debug(l).Log("message", "project does not exist in credentials provider")
 		h.errorResponse(w, "project does not exist", http.StatusNotFound)
 		return false, err
@@ -1274,13 +1281,9 @@ func (h handler) createToken(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-		return
-	}
-	projectExists, err := h.projectExists(ctx, l, cp, w, projectName)
+	credProvider := h.credentialsPlugins["vault"]
+
+	projectExists, err := h.projectExists(ctx, l, credProvider, a, r.Header, w, projectName)
 
 	if err != nil || !projectExists {
 		return
@@ -1300,12 +1303,20 @@ func (h handler) createToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	level.Debug(l).Log("message", "creating token")
-	token, err := cp.CreateToken(projectName)
+	createTokenArgs := credentials.CreateTokenArgs{
+		Authorization: *a,
+		Headers:       r.Header,
+		ProjectName:   projectName,
+	}
+
+	createTokenResp, err := credProvider.CreateToken(createTokenArgs)
 	if err != nil {
 		level.Error(l).Log("message", "error creating token with credentials provider", "error", err)
 		h.errorResponse(w, "error creating token with credentials provider", http.StatusInternalServerError)
 		return
 	}
+
+	token := createTokenResp.Token
 
 	level.Debug(l).Log("message", "inserting into db")
 	err = h.dbClient.CreateTokenEntry(ctx, token)
@@ -1353,14 +1364,9 @@ func (h handler) listTokens(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	level.Debug(l).Log("message", "creating credential provider")
-	cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	if err != nil {
-		level.Error(l).Log("message", "error creating credentials provider", "error", err)
-		h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-		return
-	}
+	credProvider := h.credentialsPlugins["vault"]
 
-	projectExists, err := h.projectExists(ctx, l, cp, w, projectName)
+	projectExists, err := h.projectExists(ctx, l, credProvider, a, r.Header, w, projectName)
 
 	if err != nil || !projectExists {
 		return
