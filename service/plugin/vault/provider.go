@@ -16,15 +16,6 @@ const (
 	authorizationKeyAdmin = "admin"
 )
 
-// Here is a real implementation of Greeter
-// type VaultProvider struct {
-// }
-
-// func (g *ProviderVault) CreateProject(name string) (types.Token, error) {
-// 	println("message from create project", " name: ", name)
-// 	return types.Token{}, nil
-// }
-
 type vaultLogical interface {
 	Delete(path string) (*vault.Secret, error)
 	List(path string) (*vault.Secret, error)
@@ -150,7 +141,6 @@ func newVaultSvc(auth credentials.Authorization, h http.Header) (vaultSvc, error
 }
 
 // NewVaultProvider returns a new VaultProvider
-// func NewVaultProvider(a credentials.Authorization, env env.Vars, h http.Header, vaultConfigFn VaultConfigFn, vaultSvcFn VaultSvcFn) (credentials.ProviderV2, error) {
 func NewVaultProvider(a credentials.Authorization, h http.Header) (credentials.ProviderV2, error) {
 	// config := vaultConfigFn(&vault.Config{Address: env.VaultAddress}, env.VaultRole, env.VaultSecret)
 	config := NewVaultConfig(
@@ -189,8 +179,6 @@ func NewVaultConfig(config *vault.Config, role, secret string) *VaultConfig {
 
 type VaultSvcFn func(c VaultConfig, h http.Header) (svc *vault.Client, err error)
 
-// type SvcFn func(c VaultConfig, h http.Header) (err error)
-
 // NewVaultSvc returns a new vault.Client.
 // TODO before open sourcing we should provide the token instead of generating it
 // TODO rename to client?
@@ -215,64 +203,6 @@ func NewVaultSvc(c VaultConfig, h http.Header) (*vault.Client, error) {
 	vaultSvc.SetToken(sec.Auth.ClientToken)
 	return vaultSvc, nil
 }
-
-// Authorization represents a user's authorization token.
-// type Authorization struct {
-// 	Provider string `valid:"required"`
-// 	Key      string `valid:"required"`
-// 	Secret   string `valid:"required"`
-// }
-
-// func (a Authorization) Validate(optionalValidations ...func() error) error {
-// 	v := []func() error{
-// 		func() error {
-// 			if a.Provider != "vault" {
-// 				return errors.New("provider must be vault")
-// 			}
-// 			return nil
-// 		},
-// 		func() error { return validations.ValidateStruct(a) },
-// 	}
-
-// 	v = append(v, optionalValidations...)
-
-// 	return validations.Validate(v...)
-// }
-
-// // ValidateAuthorizedAdmin determines if the Authorization is valid and an admin.
-// // TODO See if this can be removed when refactoring auth.
-// // Optional validation should be passed as parameter to Validate().
-// func (a Authorization) ValidateAuthorizedAdmin(adminSecret string) func() error {
-// 	return func() error {
-// 		if a.Key != "admin" {
-// 			return fmt.Errorf("must be an authorized admin")
-// 		}
-
-// 		if a.Secret != adminSecret {
-// 			return fmt.Errorf("must be an authorized admin, invalid admin secret")
-// 		}
-
-// 		return nil
-// 	}
-// }
-
-// // NewAuthorization provides an Authorization from a header.
-// // This is separate from admin functions which use the admin env var
-// func NewAuthorization(authorizationHeader string) (*Authorization, error) {
-// 	var a Authorization
-// 	auth := strings.SplitN(authorizationHeader, ":", 3)
-// 	if len(auth) < 3 {
-// 		return nil, fmt.Errorf("invalid authorization header")
-// 	}
-// 	a.Provider = auth[0]
-// 	a.Key = auth[1]
-// 	a.Secret = auth[2]
-// 	return &a, nil
-// }
-
-// func (v *VaultProvider) createPolicyState(name, policy string) error {
-// 	return v.vaultSysSvc.PutPolicy(fmt.Sprintf("%s-%s", vaultProjectPrefix, name), policy)
-// }
 
 func genProjectAppRole(name string) string {
 	return fmt.Sprintf("%s/%s-%s", vaultAppRolePrefix, vaultProjectPrefix, name)
@@ -754,22 +684,6 @@ func (v *VaultProvider) UpdateTarget(args credentials.UpdateTargetArgs) (credent
 	_, err = svc.vaultLogicalSvc.Write(path, options)
 	return resp, err
 }
-
-// func (v *VaultProvider) writeProjectState(name string) error {
-// 	options := map[string]interface{}{
-// 		"secret_id_ttl":           vaultSecretTTL,
-// 		"token_max_ttl":           vaultTokenMaxTTL,
-// 		"token_no_default_policy": "true",
-// 		"token_num_uses":          vaultTokenNumUses,
-// 		"token_policies":          fmt.Sprintf("%s-%s", vaultProjectPrefix, name),
-// 	}
-
-// 	_, err := v.vaultLogicalSvc.Write(genProjectAppRole(name), options)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
 
 func isSecretIDAccessorExists(err error) bool {
 	// Vault does not return a typed error, so unfortunately, the error message must be inspected.
