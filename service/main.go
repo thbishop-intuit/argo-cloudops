@@ -111,8 +111,7 @@ func main() {
 	// nil errors will occur. Mux sets its params in context, so passing the Argo Workflow context to
 	// setupRouter and applying it to the request will wipe out Mux vars (or any other data Mux sets in its context).
 	h := handler{
-		logger: logger,
-		// newCredentialsProvider: credentials.NewVaultProvider,
+		logger:             logger,
 		argo:               workflow.NewArgoWorkflow(argoClient.NewWorkflowServiceClient(), env.ArgoNamespace),
 		argoCtx:            argoCtx,
 		config:             config,
@@ -121,41 +120,6 @@ func main() {
 		dbClient:           dbClient,
 		credentialsPlugins: credPluginsClients,
 	}
-
-	// pluginMap is the map of plugins we can dispense.
-	// pluginMap := map[string]plugin.Plugin{
-	// 	// "greeter": &shared.GreeterPlugin{},
-	// 	"vault": &credentials.ProviderV2Plugin{},
-	// }
-
-	// We're a host! Start by launching the plugin process.
-	// client := plugin.NewClient(&plugin.ClientConfig{
-	// 	HandshakeConfig: handshakeConfig,
-	// 	Plugins:         pluginMap,
-	// 	// TODO update to be dynamic
-	// 	Cmd: exec.Command("./build/plugin/vault"),
-	// 	// Logger:          logger,
-	// })
-	// defer client.Kill()
-
-	// Connect via RPC
-	// rpcClient, err := client.Client()
-	// if err != nil {
-	// 	panic(fmt.Sprintf("connect blew up: %s", err))
-	// }
-
-	// // Request the plugin
-	// raw, err := rpcClient.Dispense("vault")
-	// if err != nil {
-	// 	panic(fmt.Sprintf("dispense blew up: %s", err))
-	// }
-
-	// // We should have a Greeter now! This feels like a normal interface
-	// // implementation but is in fact over an RPC connection.
-	// prov := raw.(credentials.ProviderV2)
-	// resp, err := fmt.Println(prov.CreateProject("foo"))
-	// println("resp: ", resp)
-	// println("err: ", err)
 
 	level.Info(logger).Log("message", "starting web service", "vault addr", env.VaultAddress, "argoAddr", env.ArgoAddress)
 	if err := http.ListenAndServeTLS(fmt.Sprintf(":%d", env.Port), "ssl/certificate.crt", "ssl/certificate.key", setupRouter(h)); err != nil {
