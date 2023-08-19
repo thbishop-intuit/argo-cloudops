@@ -45,6 +45,9 @@ var _ credentials.Provider = &CredsProviderMock{}
 //			GetTokenFunc: func(getTokenInput credentials.GetTokenInput) (credentials.GetTokenOutput, error) {
 //				panic("mock out the GetToken method")
 //			},
+//			HealthCheckFunc: func() (credentials.HealthCheckOutput, error) {
+//				panic("mock out the HealthCheck method")
+//			},
 //			ListTargetsFunc: func(listTargetsInput credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
 //				panic("mock out the ListTargets method")
 //			},
@@ -93,6 +96,9 @@ type CredsProviderMock struct {
 
 	// GetTokenFunc mocks the GetToken method.
 	GetTokenFunc func(getTokenInput credentials.GetTokenInput) (credentials.GetTokenOutput, error)
+
+	// HealthCheckFunc mocks the HealthCheck method.
+	HealthCheckFunc func() (credentials.HealthCheckOutput, error)
 
 	// ListTargetsFunc mocks the ListTargets method.
 	ListTargetsFunc func(listTargetsInput credentials.ListTargetsInput) (credentials.ListTargetsOutput, error)
@@ -156,6 +162,9 @@ type CredsProviderMock struct {
 			// GetTokenInput is the getTokenInput argument value.
 			GetTokenInput credentials.GetTokenInput
 		}
+		// HealthCheck holds details about calls to the HealthCheck method.
+		HealthCheck []struct {
+		}
 		// ListTargets holds details about calls to the ListTargets method.
 		ListTargets []struct {
 			// ListTargetsInput is the listTargetsInput argument value.
@@ -191,6 +200,7 @@ type CredsProviderMock struct {
 	lockGetProject         sync.RWMutex
 	lockGetTarget          sync.RWMutex
 	lockGetToken           sync.RWMutex
+	lockHealthCheck        sync.RWMutex
 	lockListTargets        sync.RWMutex
 	lockProjectExists      sync.RWMutex
 	lockProjectTokenExists sync.RWMutex
@@ -483,6 +493,33 @@ func (mock *CredsProviderMock) GetTokenCalls() []struct {
 	mock.lockGetToken.RLock()
 	calls = mock.calls.GetToken
 	mock.lockGetToken.RUnlock()
+	return calls
+}
+
+// HealthCheck calls HealthCheckFunc.
+func (mock *CredsProviderMock) HealthCheck() (credentials.HealthCheckOutput, error) {
+	if mock.HealthCheckFunc == nil {
+		panic("CredsProviderMock.HealthCheckFunc: method is nil but Provider.HealthCheck was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockHealthCheck.Lock()
+	mock.calls.HealthCheck = append(mock.calls.HealthCheck, callInfo)
+	mock.lockHealthCheck.Unlock()
+	return mock.HealthCheckFunc()
+}
+
+// HealthCheckCalls gets all the calls that were made to HealthCheck.
+// Check the length with:
+//
+//	len(mockedProvider.HealthCheckCalls())
+func (mock *CredsProviderMock) HealthCheckCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockHealthCheck.RLock()
+	calls = mock.calls.HealthCheck
+	mock.lockHealthCheck.RUnlock()
 	return calls
 }
 

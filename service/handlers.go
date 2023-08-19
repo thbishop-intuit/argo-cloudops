@@ -63,43 +63,25 @@ type handler struct {
 
 // Service HealthCheck
 func (h *handler) healthCheck(w http.ResponseWriter, r *http.Request) {
-	vaultEndpoint := fmt.Sprintf("%s/v1/sys/health", h.env.VaultAddress)
-	l := h.requestLogger(r, "op", "health-check", "vault-endpoint", vaultEndpoint)
+	l := h.requestLogger(r, "op", "health-check")
+	w.Header().Set("Content-Type", "text/plain")
 
-	// #nosec
-	response, err := http.Get(vaultEndpoint)
-	if err != nil {
-		level.Error(l).Log("message", "received error connecting to vault", "error", err)
+	credProvider := h.credentialsPlugins["vault"]
+
+	if _, err := credProvider.HealthCheck(); err != nil {
+		level.Error(l).Log("message", "cred provider error", "error", err)
 		w.WriteHeader(http.StatusServiceUnavailable)
 		fmt.Fprintln(w, "Health check failed")
 		return
 	}
 
-	// We don't care about the body but need to read it all and close it
-	// regardless.
-	// https://golang.org/pkg/net/http/#Client.Do
-	defer response.Body.Close()
-	_, err = io.ReadAll(response.Body)
-	if err != nil {
-		level.Warn(l).Log("message", "unable to read vault body; continuing", "error", err)
-		// Continue on and handle the actual response code from Vault accordingly.
-	}
-
-	if response.StatusCode != 200 && response.StatusCode != 429 {
-		level.Error(l).Log("message", fmt.Sprintf("received code %d which is not 200 (initialized, unsealed, and active) or 429 (unsealed and standby) when connecting to vault", response.StatusCode))
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintln(w, "Health check failed")
-		return
-	}
-
-	if err = h.dbClient.Health(r.Context()); err != nil {
+	if err := h.dbClient.Health(r.Context()); err != nil {
 		level.Error(l).Log("message", fmt.Sprintf("received code error %s when connecting to database", err.Error()))
 		w.WriteHeader(http.StatusServiceUnavailable)
 		fmt.Fprintln(w, "Health check failed")
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
 	fmt.Fprintln(w, "Health check succeeded")
 }
 

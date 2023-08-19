@@ -92,6 +92,13 @@ type Provider interface {
 	DeleteProjectToken(DeleteProjectTokenInput) (DeleteProjectTokenOutput, error)
 	DeleteTarget(DeleteTargetInput) (DeleteTargetOutput, error)
 	GetProject(GetProjectInput) (GetProjectOutput, error)
+	GetTarget(GetTargetInput) (GetTargetOutput, error)
+	// This is to get a token which can be exchanged for target credentials.
+	GetToken(GetTokenInput) (GetTokenOutput, error)
+	// TODO make sense to have an output?
+	HealthCheck() (HealthCheckOutput, error)
+	ListTargets(ListTargetsInput) (ListTargetsOutput, error)
+	ProjectExists(ProjectExistsInput) (ProjectExistsOutput, error)
 
 	// This is used to check if a token exists in
 	// the backend. The current implementation uses GetProjectToken to achieve
@@ -99,15 +106,9 @@ type Provider interface {
 	// internal implementation detail (instead of being part of the interface/a
 	// public method).
 	ProjectTokenExists(ProjectTokenExistsInput) (ProjectTokenExistsOutput, error)
-	GetTarget(GetTargetInput) (GetTargetOutput, error)
 
-	// This is to get a token which can be exchanged for target credentials.
-	GetToken(GetTokenInput) (GetTokenOutput, error)
-	ListTargets(ListTargetsInput) (ListTargetsOutput, error)
-	ProjectExists(ProjectExistsInput) (ProjectExistsOutput, error)
 	TargetExists(TargetExistsInput) (TargetExistsOutput, error)
 	UpdateTarget(UpdateTargetInput) (UpdateTargetOutput, error)
-	// TODO make sure all V2 interface methods are implemented
 }
 
 // Here is an implementation that talks over RPC
@@ -182,6 +183,9 @@ type GetProjectInput struct {
 
 type GetProjectOutput struct {
 	Project responses.GetProject // TODO change this type?
+}
+
+type HealthCheckOutput struct {
 }
 
 type ProjectTokenExistsInput struct {
@@ -304,6 +308,12 @@ func (g *ProviderV2RPCClient) GetProject(input GetProjectInput) (GetProjectOutpu
 	return output, err
 }
 
+func (g *ProviderV2RPCClient) HealthCheck() (HealthCheckOutput, error) {
+	var output HealthCheckOutput
+	err := g.client.Call("Plugin.HealthCheck", struct{}{}, &output)
+	return output, err
+}
+
 func (g *ProviderV2RPCClient) ProjectTokenExists(input ProjectTokenExistsInput) (ProjectTokenExistsOutput, error) {
 	var output ProjectTokenExistsOutput
 	err := g.client.Call("Plugin.ProjectTokenExists", input, &output)
@@ -376,6 +386,12 @@ func (s *ProviderV2RPCServer) CreateToken(input CreateTokenInput, output *Create
 
 func (s *ProviderV2RPCServer) GetToken(input GetTokenInput, output *GetTokenOutput) error {
 	v, err := s.Impl.GetToken(input)
+	*output = v
+	return err
+}
+
+func (s *ProviderV2RPCServer) HealthCheck(_ struct{}, output *HealthCheckOutput) error {
+	v, err := s.Impl.HealthCheck()
 	*output = v
 	return err
 }

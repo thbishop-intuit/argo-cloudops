@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +18,9 @@ import (
 const (
 	authorizationKeyAdmin = "admin"
 )
+
+// TODO review these structs and how we build them. Can we flatten some of
+// this?
 
 type vaultLogical interface {
 	Delete(path string) (*vault.Secret, error)
@@ -52,8 +56,10 @@ var (
 )
 
 type vaultSvc struct {
-	roleID          string
-	secretID        string
+	roleID   string
+	secretID string
+	// TODO not crazy about this; better way?
+	vaultAddr       string
 	vaultLogicalSvc vaultLogical
 	vaultSysSvc     vaultSys
 }
@@ -120,11 +126,13 @@ type VaultProvider struct {
 	logger          hclog.Logger
 	roleID          string
 	secretID        string
+	vaultAddr       string
 	vaultLogicalSvc vaultLogical
 	vaultSysSvc     vaultSys
 }
 
 func newVaultSvc(auth credentials.Authorization, h http.Header) (vaultSvc, error) {
+
 	config := NewVaultConfig(
 		&vault.Config{Address: os.Getenv("VAULT_ADDR")},
 		os.Getenv("VAULT_ROLE"),
@@ -156,10 +164,11 @@ func NewVaultProvider(a credentials.Authorization, h http.Header) (credentials.P
 		return nil, err
 	}
 	return &VaultProvider{
-		vaultLogicalSvc: vaultLogical(svc.Logical()),
-		vaultSysSvc:     vaultSys(svc.Sys()),
 		roleID:          a.Key,
 		secretID:        a.Secret,
+		vaultAddr:       config.config.Address,
+		vaultLogicalSvc: vaultLogical(svc.Logical()),
+		vaultSysSvc:     vaultSys(svc.Sys()),
 	}, nil
 }
 
@@ -556,6 +565,35 @@ func (v *VaultProvider) GetToken(input credentials.GetTokenInput) (credentials.G
 // TODO See if this can be removed when refactoring auth.
 func (v *VaultProvider) isAdmin() bool {
 	return v.roleID == authorizationKeyAdmin
+}
+
+func (v VaultProvider) HealthCheck() (credentials.HealthCheckOutput, error) {
+	output := credentials.HealthCheckOutput{}
+	vaultEndpoint := fmt.Sprintf("%s/v1/sys/health", v.vaultAddr)
+
+	// #nosec
+	response, err := http.Get(vaultEndpoint)
+	if err != nil {
+		// TODO better error
+		return output, err
+	}
+	// We don't care about the body but need to read it all and close it
+	// regardless.
+	// https://golang.org/pkg/net/http/#Client.Do
+	defer response.Body.Close()
+	_, err = io.ReadAll(response.Body)
+	if err != nil {
+		log.Print("message", "unable to read vault body; continuing", "error", err)
+		// Continue on and handle the actual response code from Vault accordingly.
+	}
+
+	if response.StatusCode != 200 && response.StatusCode != 429 {
+		log.Print("message", fmt.Sprintf("received code %d which is not 200 (initialized, unsealed, and active) or 429 (unsealed and standby) when connecting to vault", response.StatusCode))
+		// TODO better error
+		return output, fmt.Errorf("received code %d which is not 200 (initialized, unsealed, and active) or 429 (unsealed and standby) when connecting to vault", response.StatusCode)
+	}
+
+	return output, nil
 }
 
 func (v VaultProvider) ListTargets(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {

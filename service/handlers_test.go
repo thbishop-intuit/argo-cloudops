@@ -1288,21 +1288,16 @@ func TestListTokens(t *testing.T) {
 
 func TestHealthCheck(t *testing.T) {
 	tests := []struct {
-		name                  string
-		endpoint              string // Used to cause a connection error.
-		vaultStatusCode       int
-		writeBadContentLength bool // Used to create response body error.
-		wantResponseBody      string
-		wantStatusCode        int
-		wantResponseHeader    string
-		dbMock                *th.DBClientMock
+		name             string
+		credProviderErr  error
+		wantResponseBody string
+		wantStatusCode   int
+		dbMock           *th.DBClientMock
 	}{
 		{
-			name:               "good_vault_200",
-			vaultStatusCode:    http.StatusOK,
-			wantResponseBody:   "Health check succeeded\n",
-			wantStatusCode:     http.StatusOK,
-			wantResponseHeader: "text/plain",
+			name:             "cred provider good",
+			wantResponseBody: "Health check succeeded\n",
+			wantStatusCode:   http.StatusOK,
 			dbMock: &th.DBClientMock{
 				HealthFunc: func(ctx context.Context) error {
 					return nil
@@ -1310,46 +1305,13 @@ func TestHealthCheck(t *testing.T) {
 			},
 		},
 		{
-			name:               "good_vault_429",
-			vaultStatusCode:    http.StatusTooManyRequests,
-			wantResponseBody:   "Health check succeeded\n",
-			wantStatusCode:     http.StatusOK,
-			wantResponseHeader: "text/plain",
-			dbMock: &th.DBClientMock{
-				HealthFunc: func(ctx context.Context) error {
-					return nil
-				},
-			},
-		},
-		{
-			// We want successful health check in this vault error scenario.
-			name:                  "error_vault_read_response",
-			vaultStatusCode:       http.StatusOK,
-			writeBadContentLength: true,
-			wantResponseBody:      "Health check succeeded\n",
-			wantStatusCode:        http.StatusOK,
-			wantResponseHeader:    "text/plain",
-			dbMock: &th.DBClientMock{
-				HealthFunc: func(ctx context.Context) error {
-					return nil
-				},
-			},
-		},
-		{
-			name:             "error_vault_connection",
-			endpoint:         string('\f'),
-			wantResponseBody: "Health check failed\n",
-			wantStatusCode:   http.StatusServiceUnavailable,
-		},
-		{
-			name:             "error_vault_unhealthy_status_code",
-			vaultStatusCode:  http.StatusInternalServerError,
+			name:             "cred provider error",
+			credProviderErr:  errors.New("boom"),
 			wantResponseBody: "Health check failed\n",
 			wantStatusCode:   http.StatusServiceUnavailable,
 		},
 		{
 			name:             "bad_db",
-			vaultStatusCode:  http.StatusOK,
 			wantResponseBody: "Health check failed\n",
 			wantStatusCode:   http.StatusServiceUnavailable,
 			dbMock: &th.DBClientMock{
@@ -1362,35 +1324,14 @@ func TestHealthCheck(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			wantURL := "/v1/sys/health"
-
-			vaultSvc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path != wantURL {
-					http.NotFound(w, r)
-				}
-
-				if r.Method != http.MethodGet {
-					w.WriteHeader(http.StatusMethodNotAllowed)
-					return
-				}
-
-				if tt.writeBadContentLength {
-					w.Header().Set("Content-Length", "1")
-				}
-
-				w.WriteHeader(tt.vaultStatusCode)
-			}))
-			defer vaultSvc.Close()
-
-			vaultEndpoint := vaultSvc.URL
-			if tt.endpoint != "" {
-				vaultEndpoint = tt.endpoint
-			}
-
 			h := handler{
 				logger: log.NewNopLogger(),
-				env: env.Vars{
-					VaultAddress: vaultEndpoint,
+				credentialsPlugins: map[string]credentials.Provider{
+					"vault": &th.CredsProviderMock{
+						HealthCheckFunc: func() (credentials.HealthCheckOutput, error) {
+							return credentials.HealthCheckOutput{}, tt.credProviderErr
+						},
+					},
 				},
 				dbClient: tt.dbMock,
 			}
@@ -1413,7 +1354,7 @@ func TestHealthCheck(t *testing.T) {
 
 			assert.Equal(t, tt.wantStatusCode, respResult.StatusCode)
 			assert.Equal(t, tt.wantResponseBody, string(body))
-			assert.Equal(t, tt.wantResponseHeader, respResult.Header.Get("Content-Type"))
+			assert.Equal(t, "text/plain", respResult.Header.Get("Content-Type"))
 		})
 	}
 }

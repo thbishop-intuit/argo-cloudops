@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/cello-proj/cello/internal/types"
@@ -15,6 +16,85 @@ import (
 const TestRole = "testRole"
 
 var errTest = fmt.Errorf("error")
+
+func TestVaultHealthCheck(t *testing.T) {
+	tests := []struct {
+		name                  string
+		endpoint              string // Used to cause a connection error.
+		vaultStatusCode       int
+		writeBadContentLength bool // Used to create response body error.
+		errResult             bool
+	}{
+		{
+			name:            "good_vault_200",
+			vaultStatusCode: http.StatusOK,
+		},
+		{
+			name:            "good_vault_429",
+			vaultStatusCode: http.StatusTooManyRequests,
+		},
+		{
+			// We want successful health check in this vault error scenario.
+			name:                  "error_vault_read_response",
+			vaultStatusCode:       http.StatusOK,
+			writeBadContentLength: true,
+		},
+		{
+			name:      "error_vault_connection",
+			endpoint:  string('\f'),
+			errResult: true,
+		},
+		{
+			name:            "error_vault_unhealthy_status_code",
+			vaultStatusCode: http.StatusInternalServerError,
+			errResult:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			wantURL := "/v1/sys/health"
+
+			vaultSvc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != wantURL {
+					http.NotFound(w, r)
+				}
+
+				if r.Method != http.MethodGet {
+					w.WriteHeader(http.StatusMethodNotAllowed)
+					return
+				}
+
+				if tt.writeBadContentLength {
+					w.Header().Set("Content-Length", "1")
+				}
+
+				w.WriteHeader(tt.vaultStatusCode)
+			}))
+			defer vaultSvc.Close()
+
+			vaultEndpoint := vaultSvc.URL
+			if tt.endpoint != "" {
+				vaultEndpoint = tt.endpoint
+			}
+
+			v := VaultProvider{
+				vaultAddr: vaultEndpoint,
+			}
+
+			_, err := v.HealthCheck()
+			if err != nil {
+				if !tt.errResult {
+					t.Errorf("\ndid not expect error, got: %v", err)
+				}
+			} else {
+				if tt.errResult {
+					t.Errorf("\nexpected error")
+				}
+			}
+		})
+	}
+}
 
 func TestVaultCreateProject(t *testing.T) {
 	tests := []struct {
