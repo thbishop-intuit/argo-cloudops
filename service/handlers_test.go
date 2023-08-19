@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cello-proj/cello/internal/types"
+	"github.com/cello-proj/cello/service/internal/credentials"
 	"github.com/cello-proj/cello/service/internal/db"
 	"github.com/cello-proj/cello/service/internal/env"
 	"github.com/cello-proj/cello/service/internal/workflow"
@@ -46,109 +48,129 @@ type test struct {
 	wfMock     *th.WorkflowMock
 }
 
-// func TestCreateProject(t *testing.T) {
-// 	tests := []test{
-// 		{
-// 			name:       "fails to create project when not admin",
-// 			req:        loadJSON(t, "TestCreateProject/fails_to_create_project_when_not_admin_request.json"),
-// 			want:       http.StatusUnauthorized,
-// 			authHeader: userAuthHeader,
-// 			respFile:   "TestCreateProject/fails_to_create_project_when_not_admin_response.json",
-// 			url:        "/projects",
-// 			method:     "POST",
-// 		},
-// 		{
-// 			name:       "can create project",
-// 			req:        loadJSON(t, "TestCreateProject/can_create_project_request.json"),
-// 			want:       http.StatusOK,
-// 			respFile:   "TestCreateProject/can_create_project_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects",
-// 			method:     "POST",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-// 				CreateProjectFunc: func(s string) (types.Token, error) {
-// 					return types.Token{
-// 						CreatedAt: "createdAt",
-// 						ExpiresAt: "expiresAt",
-// 						ProjectID: "project1",
-// 						ProjectToken: types.ProjectToken{
-// 							ID: "secret-id-accessor",
-// 						},
-// 						RoleID: "role-id",
-// 						Secret: "secret",
-// 					}, nil
-// 				},
-// 			},
-// 			dbMock: &th.DBClientMock{
-// 				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return nil },
-// 				CreateTokenEntryFunc:   func(ctx context.Context, token types.Token) error { return nil },
-// 			},
-// 		},
-// 		{
-// 			name:       "bad request",
-// 			req:        loadJSON(t, "TestCreateProject/bad_request.json"),
-// 			want:       http.StatusBadRequest,
-// 			respFile:   "TestCreateProject/bad_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects",
-// 			method:     "POST",
-// 		},
-// 		{
-// 			name:       "project name cannot already exist",
-// 			req:        loadJSON(t, "TestCreateProject/project_name_cannot_already_exist.json"),
-// 			want:       http.StatusBadRequest,
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects",
-// 			method:     "POST",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 			},
-// 		},
-// 		{
-// 			name:       "project fails to create db entry",
-// 			req:        loadJSON(t, "TestCreateProject/project_fails_to_create_dbentry.json"),
-// 			want:       http.StatusInternalServerError,
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects",
-// 			method:     "POST",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-// 			},
-// 			dbMock: &th.DBClientMock{
-// 				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return errors.New("db error") },
-// 			},
-// 		},
-// 		{
-// 			name:       "project fails to create token entry",
-// 			req:        loadJSON(t, "TestCreateProject/project_fails_to_create_token_entry.json"),
-// 			want:       http.StatusInternalServerError,
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects",
-// 			method:     "POST",
-// 			cpMock: &th.CredsProviderMock{
-// 				CreateProjectFunc: func(s string) (types.Token, error) {
-// 					return types.Token{
-// 						CreatedAt: "createdAt",
-// 						ExpiresAt: "expiresAt",
-// 						ProjectID: "project1",
-// 						ProjectToken: types.ProjectToken{
-// 							ID: "secret-id-accessor",
-// 						},
-// 						RoleID: "role-id",
-// 						Secret: "secret",
-// 					}, nil
-// 				},
-// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-// 			},
-// 			dbMock: &th.DBClientMock{
-// 				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return nil },
-// 				CreateTokenEntryFunc:   func(ctx context.Context, token types.Token) error { return errors.New("db error") },
-// 			},
-// 		},
-// 	}
-// 	runTests(t, tests)
-// }
+func TestCreateProject(t *testing.T) {
+	tests := []test{
+		{
+			name:       "fails to create project when not admin",
+			req:        loadJSON(t, "TestCreateProject/fails_to_create_project_when_not_admin_request.json"),
+			want:       http.StatusUnauthorized,
+			authHeader: userAuthHeader,
+			respFile:   "TestCreateProject/fails_to_create_project_when_not_admin_response.json",
+			url:        "/projects",
+			method:     "POST",
+		},
+		{
+			name:       "can create project",
+			req:        loadJSON(t, "TestCreateProject/can_create_project_request.json"),
+			want:       http.StatusOK,
+			respFile:   "TestCreateProject/can_create_project_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects",
+			method:     "POST",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{
+						Exists: false,
+					}, nil
+				},
+				CreateProjectFunc: func(input credentials.CreateProjectInput) (credentials.CreateProjectOutput, error) {
+					return credentials.CreateProjectOutput{
+						Token: types.Token{
+							CreatedAt: "createdAt",
+							ExpiresAt: "expiresAt",
+							ProjectID: "project1",
+							ProjectToken: types.ProjectToken{
+								ID: "secret-id-accessor",
+							},
+							RoleID: "role-id",
+							Secret: "secret",
+						},
+					}, nil
+				},
+			},
+			dbMock: &th.DBClientMock{
+				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return nil },
+				CreateTokenEntryFunc:   func(ctx context.Context, token types.Token) error { return nil },
+			},
+		},
+		{
+			name:       "bad request",
+			req:        loadJSON(t, "TestCreateProject/bad_request.json"),
+			want:       http.StatusBadRequest,
+			respFile:   "TestCreateProject/bad_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects",
+			method:     "POST",
+		},
+		{
+			name:       "project name cannot already exist",
+			req:        loadJSON(t, "TestCreateProject/project_name_cannot_already_exist.json"),
+			want:       http.StatusBadRequest,
+			authHeader: adminAuthHeader,
+			url:        "/projects",
+			method:     "POST",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{
+						Exists: true,
+					}, nil
+				},
+			},
+		},
+		{
+			name:       "project fails to create db entry",
+			req:        loadJSON(t, "TestCreateProject/project_fails_to_create_dbentry.json"),
+			want:       http.StatusInternalServerError,
+			authHeader: adminAuthHeader,
+			url:        "/projects",
+			method:     "POST",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{
+						Exists: false,
+					}, nil
+				},
+			},
+			dbMock: &th.DBClientMock{
+				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return errors.New("db error") },
+			},
+		},
+		{
+			name:       "project fails to create token entry",
+			req:        loadJSON(t, "TestCreateProject/project_fails_to_create_token_entry.json"),
+			want:       http.StatusInternalServerError,
+			authHeader: adminAuthHeader,
+			url:        "/projects",
+			method:     "POST",
+			cpMock: &th.CredsProviderMock{
+				CreateProjectFunc: func(input credentials.CreateProjectInput) (credentials.CreateProjectOutput, error) {
+					return credentials.CreateProjectOutput{
+						Token: types.Token{
+							CreatedAt: "createdAt",
+							ExpiresAt: "expiresAt",
+							ProjectID: "project1",
+							ProjectToken: types.ProjectToken{
+								ID: "secret-id-accessor",
+							},
+							RoleID: "role-id",
+							Secret: "secret",
+						},
+					}, nil
+				},
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{
+						Exists: false,
+					}, nil
+				},
+			},
+			dbMock: &th.DBClientMock{
+				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return nil },
+				CreateTokenEntryFunc:   func(ctx context.Context, token types.Token) error { return errors.New("db error") },
+			},
+		},
+	}
+	runTests(t, tests)
+}
 
 // func TestCreateToken(t *testing.T) {
 // 	tests := []test{
@@ -1370,13 +1392,8 @@ func runTests(t *testing.T, tests []test) {
 				panic(fmt.Sprintf("Unable to load config %s", err))
 			}
 
-			// defaultCP := func(a credentials.Authorization, env env.Vars, h http.Header, f credentials.VaultConfigFn, fn credentials.VaultSvcFn) (credentials.Provider, error) {
-			// 	return &th.CredsProviderMock{}, nil
-			// }
-
 			h := handler{
-				logger: log.NewNopLogger(),
-				// newCredentialsProvider: defaultCP,
+				logger:    log.NewNopLogger(),
 				argoCtx:   context.Background(),
 				config:    config,
 				gitClient: &th.GitClientMock{},
@@ -1389,13 +1406,11 @@ func runTests(t *testing.T, tests []test) {
 				h.dbClient = tt.dbMock
 			}
 
-			// if tt.cpMock != nil {
-			// 	mockCP := func(a credentials.Authorization, env env.Vars, h http.Header, f credentials.VaultConfigFn, fn credentials.VaultSvcFn) (credentials.Provider, error) {
-			// 		return tt.cpMock, nil
-			// 	}
-
-			// 	h.newCredentialsProvider = mockCP
-			// }
+			if tt.cpMock != nil {
+				h.credentialsPlugins = map[string]credentials.Provider{
+					"vault": tt.cpMock,
+				}
+			}
 
 			if tt.gitMock != nil {
 				h.gitClient = tt.gitMock
