@@ -68,9 +68,7 @@ func TestCreateProject(t *testing.T) {
 			url:        "/projects",
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: false}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(false),
 				CreateProjectFunc: func(input credentials.CreateProjectInput) (credentials.CreateProjectOutput, error) {
 					return credentials.CreateProjectOutput{
 						Token: types.Token{
@@ -108,9 +106,7 @@ func TestCreateProject(t *testing.T) {
 			url:        "/projects",
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 		},
 		{
@@ -121,9 +117,7 @@ func TestCreateProject(t *testing.T) {
 			url:        "/projects",
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: false}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(false),
 			},
 			dbMock: &th.DBClientMock{
 				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return errors.New("db error") },
@@ -151,9 +145,7 @@ func TestCreateProject(t *testing.T) {
 						},
 					}, nil
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: false}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(false),
 			},
 			dbMock: &th.DBClientMock{
 				CreateProjectEntryFunc: func(ctx context.Context, pe db.ProjectEntry) error { return nil },
@@ -189,9 +181,7 @@ func TestCreateToken(t *testing.T) {
 						},
 					}, nil
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 			dbMock: &th.DBClientMock{
 				CreateTokenEntryFunc: func(ctx context.Context, t types.Token) error { return nil },
@@ -217,9 +207,7 @@ func TestCreateToken(t *testing.T) {
 			url:        "/projects/project1234/tokens",
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: false}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(false),
 			},
 		},
 		{
@@ -242,9 +230,7 @@ func TestCreateToken(t *testing.T) {
 				CreateTokenFunc: func(input credentials.CreateTokenInput) (credentials.CreateTokenOutput, error) {
 					return credentials.CreateTokenOutput{}, errors.New("error")
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 			dbMock: &th.DBClientMock{
 				ListTokenEntriesFunc: func(ctx context.Context, p string) ([]db.TokenEntry, error) {
@@ -269,9 +255,7 @@ func TestCreateToken(t *testing.T) {
 			url:        "/projects/projectlisttokenslimit/tokens",
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 			dbMock: &th.DBClientMock{
 				ListTokenEntriesFunc: func(ctx context.Context, p string) ([]db.TokenEntry, error) {
@@ -301,9 +285,7 @@ func TestCreateToken(t *testing.T) {
 			url:        "/projects/projectlisttokenserror/tokens",
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 			dbMock: &th.DBClientMock{
 				ListTokenEntriesFunc: func(ctx context.Context, p string) ([]db.TokenEntry, error) {
@@ -350,9 +332,7 @@ func TestGetTarget(t *testing.T) {
 						},
 					}, nil
 				},
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: true}, nil
-				},
+				TargetExistsFunc: targetExistsFunc(true),
 			},
 		},
 		{
@@ -363,9 +343,7 @@ func TestGetTarget(t *testing.T) {
 			url:        "/projects/undeletableprojecttargets/targets/targetdoesnotexist",
 			method:     "GET",
 			cpMock: &th.CredsProviderMock{
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: false}, nil
-				},
+				TargetExistsFunc: targetExistsFunc(false),
 			},
 		},
 	}
@@ -393,9 +371,7 @@ func TestListTargets(t *testing.T) {
 				ListTargetsFunc: func(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
 					return credentials.ListTargetsOutput{Targets: []string{"target1", "target2", "undeletabletarget"}}, nil
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 		},
 		{
@@ -406,9 +382,7 @@ func TestListTargets(t *testing.T) {
 			url:        "/projects/badproject/targets",
 			method:     "GET",
 			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: false}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(false),
 			},
 		},
 		{
@@ -422,9 +396,7 @@ func TestListTargets(t *testing.T) {
 				ListTargetsFunc: func(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
 					return credentials.ListTargetsOutput{Targets: []string{}}, nil
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 		},
 	}
@@ -453,9 +425,7 @@ func TestDeleteProject(t *testing.T) {
 				ListTargetsFunc: func(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
 					return credentials.ListTargetsOutput{Targets: []string{}}, nil
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 			dbMock: &th.DBClientMock{
 				DeleteProjectEntryFunc: func(ctx context.Context, project string) error { return nil },
@@ -471,9 +441,7 @@ func TestDeleteProject(t *testing.T) {
 				ListTargetsFunc: func(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
 					return credentials.ListTargetsOutput{Targets: []string{"target"}}, nil
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 		},
 		{
@@ -489,9 +457,7 @@ func TestDeleteProject(t *testing.T) {
 				ListTargetsFunc: func(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
 					return credentials.ListTargetsOutput{Targets: []string{}}, nil
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 		},
 		{
@@ -507,9 +473,7 @@ func TestDeleteProject(t *testing.T) {
 				ListTargetsFunc: func(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
 					return credentials.ListTargetsOutput{Targets: []string{}}, nil
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
 			},
 			dbMock: &th.DBClientMock{
 				DeleteProjectEntryFunc: func(ctx context.Context, project string) error { return errors.New("error") },
@@ -570,12 +534,8 @@ func TestCreateTarget(t *testing.T) {
 				CreateTargetFunc: func(input credentials.CreateTargetInput) (credentials.CreateTargetOutput, error) {
 					return credentials.CreateTargetOutput{}, nil
 				},
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: false}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
+				TargetExistsFunc:  targetExistsFunc(false),
 			},
 		},
 		{
@@ -614,12 +574,8 @@ func TestCreateTarget(t *testing.T) {
 			url:        "/projects/projectalreadyexists/targets",
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: true}, nil
-				},
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: true}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(true),
+				TargetExistsFunc:  targetExistsFunc(true),
 			},
 		},
 		{
@@ -631,9 +587,7 @@ func TestCreateTarget(t *testing.T) {
 			url:        "/projects/projectdoesnotexist/targets",
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
-				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{Exists: false}, nil
-				},
+				ProjectExistsFunc: projExistsFunc(false),
 			},
 		},
 	}
@@ -710,9 +664,7 @@ func TestUpdateTarget(t *testing.T) {
 					}, nil
 				},
 				ProjectExistsFunc: projExistsFunc(true),
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: true}, nil
-				},
+				TargetExistsFunc:  targetExistsFunc(true),
 				UpdateTargetFunc: func(input credentials.UpdateTargetInput) (credentials.UpdateTargetOutput, error) {
 					return credentials.UpdateTargetOutput{}, nil
 				},
@@ -760,9 +712,7 @@ func TestUpdateTarget(t *testing.T) {
 					}, nil
 				},
 				ProjectExistsFunc: projExistsFunc(true),
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: true}, nil
-				},
+				TargetExistsFunc:  targetExistsFunc(true),
 			},
 		},
 		{
@@ -790,9 +740,7 @@ func TestUpdateTarget(t *testing.T) {
 					}, nil
 				},
 				ProjectExistsFunc: projExistsFunc(true),
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: true}, nil
-				},
+				TargetExistsFunc:  targetExistsFunc(true),
 				UpdateTargetFunc: func(input credentials.UpdateTargetInput) (credentials.UpdateTargetOutput, error) {
 					return credentials.UpdateTargetOutput{}, nil
 				},
@@ -808,9 +756,7 @@ func TestUpdateTarget(t *testing.T) {
 			method:     "PATCH",
 			cpMock: &th.CredsProviderMock{
 				ProjectExistsFunc: projExistsFunc(true),
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: false}, nil
-				},
+				TargetExistsFunc:  targetExistsFunc(false),
 			},
 		},
 		{
@@ -844,9 +790,7 @@ func TestCreateWorkflow(t *testing.T) {
 					return credentials.GetTokenOutput{Token: testPassword}, nil
 				},
 				ProjectExistsFunc: projExistsFunc(true),
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: true}, nil
-				},
+				TargetExistsFunc:  targetExistsFunc(true),
 			},
 			wfMock: &th.WorkflowMock{
 				SubmitFunc: func(ctx context.Context, from string, parameters, labels map[string]string) (string, error) {
@@ -900,9 +844,7 @@ func TestCreateWorkflow(t *testing.T) {
 					return credentials.GetTokenOutput{Token: testPassword}, nil
 				},
 				ProjectExistsFunc: projExistsFunc(true),
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: false}, nil
-				},
+				TargetExistsFunc:  targetExistsFunc(false),
 			},
 		},
 		{
@@ -933,9 +875,7 @@ func TestCreateWorkflowFromGit(t *testing.T) {
 					return credentials.GetTokenOutput{Token: testPassword}, nil
 				},
 				ProjectExistsFunc: projExistsFunc(true),
-				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{Exists: true}, nil
-				},
+				TargetExistsFunc:  targetExistsFunc(true),
 			},
 			dbMock: &th.DBClientMock{
 				ReadProjectEntryFunc: func(ctx context.Context, project string) (db.ProjectEntry, error) {
@@ -1593,6 +1533,14 @@ func loadJSON(t *testing.T, filename string) (output interface{}) {
 func projExistsFunc(exists bool) func(credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
 	return func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
 		return credentials.ProjectExistsOutput{
+			Exists: exists,
+		}, nil
+	}
+}
+
+func targetExistsFunc(exists bool) func(credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
+	return func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
+		return credentials.TargetExistsOutput{
 			Exists: exists,
 		}, nil
 	}
