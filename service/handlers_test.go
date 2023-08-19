@@ -1063,18 +1063,17 @@ func TestDeleteToken(t *testing.T) {
 				},
 			},
 		},
-		// TODO fix this; is this valid? see comment in handler func
-		// {
-		// 	name:       "project does not exist",
-		// 	want:       http.StatusNotFound,
-		// 	respFile:   "TestDeleteToken/project_does_not_exist_response.json",
-		// 	authHeader: adminAuthHeader,
-		// 	url:        "/projects/projectdoesnotexist/tokens/tokendoesnotexist",
-		// 	method:     "DELETE",
-		// 	cpMock: &th.CredsProviderMock{
-		// 		ProjectExistsFunc: projExistsFunc(false),
-		// 	},
-		// },
+		{
+			name:       "project does not exist",
+			want:       http.StatusNotFound,
+			respFile:   "TestDeleteToken/project_does_not_exist_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectdoesnotexist/tokens/tokendoesnotexist",
+			method:     "DELETE",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: projExistsFunc(false),
+			},
+		},
 		{
 			name:       "token does not exist in DB or CP",
 			want:       http.StatusOK,
