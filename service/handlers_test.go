@@ -556,77 +556,90 @@ func TestGetProject(t *testing.T) {
 	runTests(t, tests)
 }
 
-// func TestCreateTarget(t *testing.T) {
-// 	tests := []test{
-// 		{
-// 			name:       "can create target",
-// 			req:        loadJSON(t, "TestCreateTarget/can_create_target_request.json"),
-// 			want:       http.StatusOK,
-// 			respFile:   "TestCreateTarget/can_create_target_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/projectalreadyexists/targets",
-// 			method:     "POST",
-// 			cpMock: &th.CredsProviderMock{
-// 				CreateTargetFunc:  func(s string, target types.Target) error { return nil },
-// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
-// 			},
-// 		},
-// 		{
-// 			name:       "fails to create target when not admin",
-// 			req:        loadJSON(t, "TestCreateTarget/fails_to_create_target_when_not_admin_request.json"),
-// 			want:       http.StatusUnauthorized,
-// 			respFile:   "TestCreateTarget/fails_to_create_target_when_not_admin_response.json",
-// 			authHeader: userAuthHeader,
-// 			url:        "/projects/projectalreadyexists/targets",
-// 			method:     "POST",
-// 		},
-// 		{
-// 			name:       "fails to create target when using a bad auth header",
-// 			req:        loadJSON(t, "TestCreateTarget/can_create_target_request.json"),
-// 			want:       http.StatusUnauthorized,
-// 			respFile:   "TestCreateTarget/fails_to_create_target_when_bad_auth_header_response.json",
-// 			authHeader: invalidAuthHeader,
-// 			url:        "/projects/projectalreadyexists/targets",
-// 			method:     "POST",
-// 		},
-// 		{
-// 			name:       "bad request",
-// 			req:        loadJSON(t, "TestCreateTarget/bad_request.json"),
-// 			want:       http.StatusBadRequest,
-// 			respFile:   "TestCreateTarget/bad_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/projectalreadyexists/targets",
-// 			method:     "POST",
-// 		},
-// 		{
-// 			name:       "target name cannot already exist",
-// 			req:        loadJSON(t, "TestCreateTarget/target_name_cannot_already_exist_request.json"),
-// 			want:       http.StatusBadRequest,
-// 			respFile:   "TestCreateTarget/target_name_cannot_already_exist_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/projectalreadyexists/targets",
-// 			method:     "POST",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
-// 			},
-// 		},
-// 		{
-// 			name:       "project must exist",
-// 			req:        loadJSON(t, "TestCreateTarget/project_must_exist_request.json"),
-// 			want:       http.StatusBadRequest,
-// 			respFile:   "TestCreateTarget/project_must_exist_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/projectdoesnotexist/targets",
-// 			method:     "POST",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-// 			},
-// 		},
-// 	}
-// 	runTests(t, tests)
-// }
+func TestCreateTarget(t *testing.T) {
+	tests := []test{
+		{
+			name:       "can create target",
+			req:        loadJSON(t, "TestCreateTarget/can_create_target_request.json"),
+			want:       http.StatusOK,
+			respFile:   "TestCreateTarget/can_create_target_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectalreadyexists/targets",
+			method:     "POST",
+			cpMock: &th.CredsProviderMock{
+				CreateTargetFunc: func(input credentials.CreateTargetInput) (credentials.CreateTargetOutput, error) {
+					return credentials.CreateTargetOutput{}, nil
+				},
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{Exists: true}, nil
+				},
+				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
+					return credentials.TargetExistsOutput{Exists: false}, nil
+				},
+			},
+		},
+		{
+			name:       "fails to create target when not admin",
+			req:        loadJSON(t, "TestCreateTarget/fails_to_create_target_when_not_admin_request.json"),
+			want:       http.StatusUnauthorized,
+			respFile:   "TestCreateTarget/fails_to_create_target_when_not_admin_response.json",
+			authHeader: userAuthHeader,
+			url:        "/projects/projectalreadyexists/targets",
+			method:     "POST",
+		},
+		{
+			name:       "fails to create target when using a bad auth header",
+			req:        loadJSON(t, "TestCreateTarget/can_create_target_request.json"),
+			want:       http.StatusUnauthorized,
+			respFile:   "TestCreateTarget/fails_to_create_target_when_bad_auth_header_response.json",
+			authHeader: invalidAuthHeader,
+			url:        "/projects/projectalreadyexists/targets",
+			method:     "POST",
+		},
+		{
+			name:       "bad request",
+			req:        loadJSON(t, "TestCreateTarget/bad_request.json"),
+			want:       http.StatusBadRequest,
+			respFile:   "TestCreateTarget/bad_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectalreadyexists/targets",
+			method:     "POST",
+		},
+		{
+			name:       "target name cannot already exist",
+			req:        loadJSON(t, "TestCreateTarget/target_name_cannot_already_exist_request.json"),
+			want:       http.StatusBadRequest,
+			respFile:   "TestCreateTarget/target_name_cannot_already_exist_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectalreadyexists/targets",
+			method:     "POST",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{Exists: true}, nil
+				},
+				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
+					return credentials.TargetExistsOutput{Exists: true}, nil
+				},
+			},
+		},
+		{
+			name:       "project must exist",
+			req:        loadJSON(t, "TestCreateTarget/project_must_exist_request.json"),
+			want:       http.StatusBadRequest,
+			respFile:   "TestCreateTarget/project_must_exist_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectdoesnotexist/targets",
+			method:     "POST",
+			cpMock: &th.CredsProviderMock{
+				// ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{Exists: false}, nil
+				},
+			},
+		},
+	}
+	runTests(t, tests)
+}
 
 // func TestDeleteTarget(t *testing.T) {
 // 	tests := []test{
