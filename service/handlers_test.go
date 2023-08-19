@@ -336,53 +336,63 @@ func TestCreateToken(t *testing.T) {
 	runTests(t, tests)
 }
 
-// func TestGetTarget(t *testing.T) {
-// 	tests := []test{
-// 		{
-// 			name:       "fails to get target when not admin",
-// 			want:       http.StatusUnauthorized,
-// 			respFile:   "TestGetTarget/fails_to_get_target_when_not_admin_response.json",
-// 			authHeader: userAuthHeader,
-// 			url:        "/projects/undeletableprojecttargets/targets/target1",
-// 			method:     "GET",
-// 		},
-// 		{
-// 			name:       "can get target",
-// 			want:       http.StatusOK,
-// 			respFile:   "TestGetTarget/can_get_target_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/undeletableprojecttargets/targets/TARGET_EXISTS",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				GetTargetFunc: func(s1, s2 string) (types.Target, error) {
-// 					return types.Target{
-// 						Name: "TARGET",
-// 						Properties: types.TargetProperties{
-// 							CredentialType: "assumed_role",
-// 							PolicyArns:     []string{"arn:aws:iam::012345678901:policy/test-policy"},
-// 							PolicyDocument: "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Effect\": \"Allow\", \"Action\": \"s3:ListBuckets\", \"Resource\": \"*\" } ] }",
-// 							RoleArn:        "arn:aws:iam::012345678901:role/test-role",
-// 						},
-// 						Type: "aws_account",
-// 					}, nil
-// 				},
-// 				TargetExistsFunc: func(s1, s2 string) (bool, error) { return true, nil },
-// 			},
-// 		},
-// 		{
-// 			name:       "target does not exist",
-// 			want:       http.StatusNotFound,
-// 			respFile:   "TestGetTarget/target_does_not_exist_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/undeletableprojecttargets/targets/targetdoesnotexist",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				TargetExistsFunc: func(s1, s2 string) (bool, error) { return false, nil },
-// 			},
-// 		},
-// 	}
-// 	runTests(t, tests)
-// }
+func TestGetTarget(t *testing.T) {
+	tests := []test{
+		{
+			name:       "fails to get target when not admin",
+			want:       http.StatusUnauthorized,
+			respFile:   "TestGetTarget/fails_to_get_target_when_not_admin_response.json",
+			authHeader: userAuthHeader,
+			url:        "/projects/undeletableprojecttargets/targets/target1",
+			method:     "GET",
+		},
+		{
+			name:       "can get target",
+			want:       http.StatusOK,
+			respFile:   "TestGetTarget/can_get_target_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/undeletableprojecttargets/targets/TARGET_EXISTS",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				GetTargetFunc: func(input credentials.GetTargetInput) (credentials.GetTargetOutput, error) {
+					return credentials.GetTargetOutput{
+						Target: types.Target{
+							Name: "TARGET",
+							Properties: types.TargetProperties{
+								CredentialType: "assumed_role",
+								PolicyArns:     []string{"arn:aws:iam::012345678901:policy/test-policy"},
+								PolicyDocument: "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Effect\": \"Allow\", \"Action\": \"s3:ListBuckets\", \"Resource\": \"*\" } ] }",
+								RoleArn:        "arn:aws:iam::012345678901:role/test-role",
+							},
+							Type: "aws_account",
+						},
+					}, nil
+				},
+				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
+					return credentials.TargetExistsOutput{
+						Exists: true,
+					}, nil
+				},
+			},
+		},
+		{
+			name:       "target does not exist",
+			want:       http.StatusNotFound,
+			respFile:   "TestGetTarget/target_does_not_exist_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/undeletableprojecttargets/targets/targetdoesnotexist",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
+					return credentials.TargetExistsOutput{
+						Exists: false,
+					}, nil
+				},
+			},
+		},
+	}
+	runTests(t, tests)
+}
 
 // func TestListTargets(t *testing.T) {
 // 	tests := []test{

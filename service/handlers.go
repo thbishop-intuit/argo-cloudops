@@ -474,7 +474,7 @@ func (h handler) getTarget(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	jsonResult, err := json.Marshal(targetInfo)
+	jsonResult, err := json.Marshal(targetInfo.Target)
 	if err != nil {
 		level.Error(l).Log("message", "error serializing json target data", "error", err)
 		h.errorResponse(w, "error serializing json target data", http.StatusInternalServerError)
