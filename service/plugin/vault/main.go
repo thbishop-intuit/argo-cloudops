@@ -33,7 +33,7 @@ func main() {
 	}
 	// pluginMap is the map of plugins we can dispense.
 	var pluginMap = map[string]plugin.Plugin{
-		"vault": &credentials.ProviderV2Plugin{Impl: vault},
+		"vault": &credentials.ProviderPlugin{Impl: vault},
 	}
 
 	println("message from vault plugin", "foo", "bar")

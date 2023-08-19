@@ -78,7 +78,7 @@ func main() {
 	pluginMap := map[string]plugin.Plugin{}
 
 	for _, name := range credPlugins {
-		pluginMap[name] = &credentials.ProviderV2Plugin{}
+		pluginMap[name] = &credentials.ProviderPlugin{}
 
 	}
 

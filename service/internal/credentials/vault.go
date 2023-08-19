@@ -112,7 +112,7 @@ type Provider interface {
 }
 
 // Here is an implementation that talks over RPC
-type ProviderV2RPCClient struct {
+type ProviderRPCClient struct {
 	client *rpc.Client
 }
 
@@ -263,146 +263,146 @@ type UpdateTargetInput struct {
 type UpdateTargetOutput struct {
 }
 
-func (g *ProviderV2RPCClient) CreateProject(input CreateProjectInput) (CreateProjectOutput, error) {
+func (g *ProviderRPCClient) CreateProject(input CreateProjectInput) (CreateProjectOutput, error) {
 	var output CreateProjectOutput
 	err := g.client.Call("Plugin.CreateProject", input, &output)
 	return output, err
 }
 
-func (g *ProviderV2RPCClient) CreateTarget(input CreateTargetInput) (CreateTargetOutput, error) {
+func (g *ProviderRPCClient) CreateTarget(input CreateTargetInput) (CreateTargetOutput, error) {
 	var output CreateTargetOutput
 	err := g.client.Call("Plugin.CreateTarget", input, &output)
 	return output, err
 }
 
-func (g *ProviderV2RPCClient) CreateToken(input CreateTokenInput) (CreateTokenOutput, error) {
+func (g *ProviderRPCClient) CreateToken(input CreateTokenInput) (CreateTokenOutput, error) {
 	var output CreateTokenOutput
 	err := g.client.Call("Plugin.CreateToken", input, &output)
 	return output, err
 }
 
 // TODO
-func (g *ProviderV2RPCClient) DeleteProject(input DeleteProjectInput) (DeleteProjectOutput, error) {
+func (g *ProviderRPCClient) DeleteProject(input DeleteProjectInput) (DeleteProjectOutput, error) {
 	var output DeleteProjectOutput
 	err := g.client.Call("Plugin.DeleteProject", input, &output)
 	return output, err
 }
 
 // TODO
-func (g *ProviderV2RPCClient) DeleteProjectToken(input DeleteProjectTokenInput) (DeleteProjectTokenOutput, error) {
+func (g *ProviderRPCClient) DeleteProjectToken(input DeleteProjectTokenInput) (DeleteProjectTokenOutput, error) {
 	var output DeleteProjectTokenOutput
 	err := g.client.Call("Plugin.DeleteProjectToken", input, &output)
 	return output, err
 }
 
 // TODO
-func (g *ProviderV2RPCClient) DeleteTarget(input DeleteTargetInput) (DeleteTargetOutput, error) {
+func (g *ProviderRPCClient) DeleteTarget(input DeleteTargetInput) (DeleteTargetOutput, error) {
 	var output DeleteTargetOutput
 	err := g.client.Call("Plugin.DeleteTarget", input, &output)
 	return output, err
 }
 
-func (g *ProviderV2RPCClient) GetProject(input GetProjectInput) (GetProjectOutput, error) {
+func (g *ProviderRPCClient) GetProject(input GetProjectInput) (GetProjectOutput, error) {
 	var output GetProjectOutput
 	err := g.client.Call("Plugin.GetProject", input, &output)
 	return output, err
 }
 
-func (g *ProviderV2RPCClient) HealthCheck() (HealthCheckOutput, error) {
+func (g *ProviderRPCClient) HealthCheck() (HealthCheckOutput, error) {
 	var output HealthCheckOutput
 	err := g.client.Call("Plugin.HealthCheck", struct{}{}, &output)
 	return output, err
 }
 
-func (g *ProviderV2RPCClient) ProjectTokenExists(input ProjectTokenExistsInput) (ProjectTokenExistsOutput, error) {
+func (g *ProviderRPCClient) ProjectTokenExists(input ProjectTokenExistsInput) (ProjectTokenExistsOutput, error) {
 	var output ProjectTokenExistsOutput
 	err := g.client.Call("Plugin.ProjectTokenExists", input, &output)
 	return output, err
 }
 
-func (g *ProviderV2RPCClient) GetTarget(input GetTargetInput) (GetTargetOutput, error) {
+func (g *ProviderRPCClient) GetTarget(input GetTargetInput) (GetTargetOutput, error) {
 	var output GetTargetOutput
 	err := g.client.Call("Plugin.GetTarget", input, &output)
 	return output, err
 }
 
 // TODO input correct?
-func (g *ProviderV2RPCClient) GetToken(input GetTokenInput) (GetTokenOutput, error) {
+func (g *ProviderRPCClient) GetToken(input GetTokenInput) (GetTokenOutput, error) {
 	var output GetTokenOutput
 	err := g.client.Call("Plugin.GetToken", input, &output)
 	return output, err
 }
 
-func (g *ProviderV2RPCClient) ListTargets(input ListTargetsInput) (ListTargetsOutput, error) {
+func (g *ProviderRPCClient) ListTargets(input ListTargetsInput) (ListTargetsOutput, error) {
 	var output ListTargetsOutput
 	err := g.client.Call("Plugin.ListTargets", input, &output)
 	return output, err
 }
 
-func (g *ProviderV2RPCClient) ProjectExists(input ProjectExistsInput) (ProjectExistsOutput, error) {
+func (g *ProviderRPCClient) ProjectExists(input ProjectExistsInput) (ProjectExistsOutput, error) {
 	var output ProjectExistsOutput
 	err := g.client.Call("Plugin.ProjectExists", input, &output)
 	return output, err
 }
 
-func (g *ProviderV2RPCClient) TargetExists(input TargetExistsInput) (TargetExistsOutput, error) {
+func (g *ProviderRPCClient) TargetExists(input TargetExistsInput) (TargetExistsOutput, error) {
 	var output TargetExistsOutput
 	err := g.client.Call("Plugin.TargetExists", input, &output)
 	return output, err
 }
 
 // TODO
-func (g *ProviderV2RPCClient) UpdateTarget(input UpdateTargetInput) (UpdateTargetOutput, error) {
+func (g *ProviderRPCClient) UpdateTarget(input UpdateTargetInput) (UpdateTargetOutput, error) {
 	var output UpdateTargetOutput
 	err := g.client.Call("Plugin.UpdateTarget", input, &output)
 	return output, err
 }
 
-// Here is the RPC server that ProviderV2RPC talks to, conforming to
+// Here is the RPC server that ProviderRPC talks to, conforming to
 // the requirements of net/rpc
-type ProviderV2RPCServer struct {
+type ProviderRPCServer struct {
 	// This is the real implementation
 	Impl Provider
 }
 
 // TODO not sure if this is the best way to handle accepting/returning args
-func (s *ProviderV2RPCServer) CreateProject(input CreateProjectInput, output *CreateProjectOutput) error {
+func (s *ProviderRPCServer) CreateProject(input CreateProjectInput, output *CreateProjectOutput) error {
 	v, err := s.Impl.CreateProject(input)
 	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) CreateTarget(input CreateTargetInput, output *CreateTargetOutput) error {
+func (s *ProviderRPCServer) CreateTarget(input CreateTargetInput, output *CreateTargetOutput) error {
 	v, err := s.Impl.CreateTarget(input)
 	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) CreateToken(input CreateTokenInput, output *CreateTokenOutput) error {
+func (s *ProviderRPCServer) CreateToken(input CreateTokenInput, output *CreateTokenOutput) error {
 	v, err := s.Impl.CreateToken(input)
 	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) GetToken(input GetTokenInput, output *GetTokenOutput) error {
+func (s *ProviderRPCServer) GetToken(input GetTokenInput, output *GetTokenOutput) error {
 	v, err := s.Impl.GetToken(input)
 	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) HealthCheck(_ struct{}, output *HealthCheckOutput) error {
+func (s *ProviderRPCServer) HealthCheck(_ struct{}, output *HealthCheckOutput) error {
 	v, err := s.Impl.HealthCheck()
 	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) ProjectExists(input ProjectExistsInput, output *ProjectExistsOutput) error {
+func (s *ProviderRPCServer) ProjectExists(input ProjectExistsInput, output *ProjectExistsOutput) error {
 	v, err := s.Impl.ProjectExists(input)
 	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) TargetExists(input TargetExistsInput, output *TargetExistsOutput) error {
+func (s *ProviderRPCServer) TargetExists(input TargetExistsInput, output *TargetExistsOutput) error {
 	v, err := s.Impl.TargetExists(input)
 	*output = v
 	return err
@@ -411,22 +411,22 @@ func (s *ProviderV2RPCServer) TargetExists(input TargetExistsInput, output *Targ
 // This is the implementation of plugin.Plugin so we can serve/consume this
 //
 // This has two methods: Server must return an RPC server for this plugin
-// type. We construct a ProviderV2RPCServer for this.
+// type. We construct a ProviderRPCServer for this.
 //
 // Client must return an implementation of our interface that communicates
-// over an RPC client. We return ProviderV2RPC for this.
+// over an RPC client. We return ProviderRPC for this.
 //
 // Ignore MuxBroker. That is used to create more multiplexed streams on our
 // plugin connection and is a more advanced use case.
-type ProviderV2Plugin struct {
+type ProviderPlugin struct {
 	// Impl Injection
 	Impl Provider
 }
 
-func (p *ProviderV2Plugin) Server(*plugin.MuxBroker) (interface{}, error) {
-	return &ProviderV2RPCServer{Impl: p.Impl}, nil
+func (p *ProviderPlugin) Server(*plugin.MuxBroker) (interface{}, error) {
+	return &ProviderRPCServer{Impl: p.Impl}, nil
 }
 
-func (ProviderV2Plugin) Client(b *plugin.MuxBroker, c *rpc.Client) (interface{}, error) {
-	return &ProviderV2RPCClient{client: c}, nil
+func (ProviderPlugin) Client(b *plugin.MuxBroker, c *rpc.Client) (interface{}, error) {
+	return &ProviderRPCClient{client: c}, nil
 }
