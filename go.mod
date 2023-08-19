@@ -20,8 +20,9 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-hclog v0.16.2 // indirect
+	github.com/hashicorp/go-hclog v0.16.2
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/go-plugin v1.0.1
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.1-vault-3 // indirect
 	github.com/hashicorp/vault/api v1.1.1
@@ -50,8 +51,6 @@ require (
 	k8s.io/api v0.19.6
 	k8s.io/apimachinery v0.19.6
 )
-
-require github.com/hashicorp/go-plugin v1.0.1
 
 require (
 	github.com/Masterminds/goutils v1.1.0 // indirect
