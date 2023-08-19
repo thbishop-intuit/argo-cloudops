@@ -1177,6 +1177,8 @@ func (h handler) deleteToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO what's the proper thing to do here? Old code didn't handle
+	// this well. The old code, used the project exist helper below.
 	if !projExistOutput.Exists {
 		// TODO should be a warn?
 		level.Error(l).Log("error", "project does not exist")
