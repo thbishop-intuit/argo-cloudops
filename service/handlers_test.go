@@ -69,9 +69,7 @@ func TestCreateProject(t *testing.T) {
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
 				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{
-						Exists: false,
-					}, nil
+					return credentials.ProjectExistsOutput{Exists: false}, nil
 				},
 				CreateProjectFunc: func(input credentials.CreateProjectInput) (credentials.CreateProjectOutput, error) {
 					return credentials.CreateProjectOutput{
@@ -111,9 +109,7 @@ func TestCreateProject(t *testing.T) {
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
 				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{
-						Exists: true,
-					}, nil
+					return credentials.ProjectExistsOutput{Exists: true}, nil
 				},
 			},
 		},
@@ -126,9 +122,7 @@ func TestCreateProject(t *testing.T) {
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
 				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{
-						Exists: false,
-					}, nil
+					return credentials.ProjectExistsOutput{Exists: false}, nil
 				},
 			},
 			dbMock: &th.DBClientMock{
@@ -158,9 +152,7 @@ func TestCreateProject(t *testing.T) {
 					}, nil
 				},
 				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{
-						Exists: false,
-					}, nil
+					return credentials.ProjectExistsOutput{Exists: false}, nil
 				},
 			},
 			dbMock: &th.DBClientMock{
@@ -198,9 +190,7 @@ func TestCreateToken(t *testing.T) {
 					}, nil
 				},
 				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{
-						Exists: true,
-					}, nil
+					return credentials.ProjectExistsOutput{Exists: true}, nil
 				},
 			},
 			dbMock: &th.DBClientMock{
@@ -228,9 +218,7 @@ func TestCreateToken(t *testing.T) {
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
 				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{
-						Exists: false,
-					}, nil
+					return credentials.ProjectExistsOutput{Exists: false}, nil
 				},
 			},
 		},
@@ -255,9 +243,7 @@ func TestCreateToken(t *testing.T) {
 					return credentials.CreateTokenOutput{}, errors.New("error")
 				},
 				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{
-						Exists: true,
-					}, nil
+					return credentials.ProjectExistsOutput{Exists: true}, nil
 				},
 			},
 			dbMock: &th.DBClientMock{
@@ -284,9 +270,7 @@ func TestCreateToken(t *testing.T) {
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
 				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{
-						Exists: true,
-					}, nil
+					return credentials.ProjectExistsOutput{Exists: true}, nil
 				},
 			},
 			dbMock: &th.DBClientMock{
@@ -318,9 +302,7 @@ func TestCreateToken(t *testing.T) {
 			method:     "POST",
 			cpMock: &th.CredsProviderMock{
 				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
-					return credentials.ProjectExistsOutput{
-						Exists: true,
-					}, nil
+					return credentials.ProjectExistsOutput{Exists: true}, nil
 				},
 			},
 			dbMock: &th.DBClientMock{
@@ -369,9 +351,7 @@ func TestGetTarget(t *testing.T) {
 					}, nil
 				},
 				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{
-						Exists: true,
-					}, nil
+					return credentials.TargetExistsOutput{Exists: true}, nil
 				},
 			},
 		},
@@ -384,9 +364,7 @@ func TestGetTarget(t *testing.T) {
 			method:     "GET",
 			cpMock: &th.CredsProviderMock{
 				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-					return credentials.TargetExistsOutput{
-						Exists: false,
-					}, nil
+					return credentials.TargetExistsOutput{Exists: false}, nil
 				},
 			},
 		},
@@ -394,58 +372,64 @@ func TestGetTarget(t *testing.T) {
 	runTests(t, tests)
 }
 
-// func TestListTargets(t *testing.T) {
-// 	tests := []test{
-// 		{
-// 			name:       "fails to list targets when not admin",
-// 			want:       http.StatusUnauthorized,
-// 			respFile:   "TestListTargets/fails_to_list_targets_when_not_admin_response.json",
-// 			authHeader: userAuthHeader,
-// 			url:        "/projects/undeletableprojecttargets/targets",
-// 			method:     "GET",
-// 		},
-// 		{
-// 			name:       "can list targets",
-// 			want:       http.StatusOK,
-// 			respFile:   "TestListTargets/can_get_target_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/undeletableprojecttargets/targets",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				ListTargetsFunc: func(s string) ([]string, error) {
-// 					return []string{"target1", "target2", "undeletabletarget"}, nil
-// 				},
-// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 			},
-// 		},
-// 		{
-// 			name:       "project not found",
-// 			want:       http.StatusNotFound,
-// 			respFile:   "TestListTargets/project_not_found_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/badproject/targets",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-// 			},
-// 		},
-// 		{
-// 			name:       "no targets",
-// 			want:       http.StatusOK,
-// 			respFile:   "TestListTargets/no_targets_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/projectalreadyexists/targets",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				ListTargetsFunc: func(s string) ([]string, error) {
-// 					return []string{}, nil
-// 				},
-// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 			},
-// 		},
-// 	}
-// 	runTests(t, tests)
-// }
+func TestListTargets(t *testing.T) {
+	tests := []test{
+		{
+			name:       "fails to list targets when not admin",
+			want:       http.StatusUnauthorized,
+			respFile:   "TestListTargets/fails_to_list_targets_when_not_admin_response.json",
+			authHeader: userAuthHeader,
+			url:        "/projects/undeletableprojecttargets/targets",
+			method:     "GET",
+		},
+		{
+			name:       "can list targets",
+			want:       http.StatusOK,
+			respFile:   "TestListTargets/can_get_target_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/undeletableprojecttargets/targets",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				ListTargetsFunc: func(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
+					return credentials.ListTargetsOutput{Targets: []string{"target1", "target2", "undeletabletarget"}}, nil
+				},
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{Exists: true}, nil
+				},
+			},
+		},
+		{
+			name:       "project not found",
+			want:       http.StatusNotFound,
+			respFile:   "TestListTargets/project_not_found_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/badproject/targets",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{Exists: false}, nil
+				},
+			},
+		},
+		{
+			name:       "no targets",
+			want:       http.StatusOK,
+			respFile:   "TestListTargets/no_targets_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectalreadyexists/targets",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				ListTargetsFunc: func(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
+					return credentials.ListTargetsOutput{Targets: []string{}}, nil
+				},
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{Exists: true}, nil
+				},
+			},
+		},
+	}
+	runTests(t, tests)
+}
 
 // func TestDeleteProject(t *testing.T) {
 // 	tests := []test{
