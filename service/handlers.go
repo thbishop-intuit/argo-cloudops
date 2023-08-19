@@ -58,7 +58,7 @@ type handler struct {
 	gitClient          git.Client
 	env                env.Vars
 	dbClient           db.Client
-	credentialsPlugins map[string]credentials.ProviderV2
+	credentialsPlugins map[string]credentials.Provider
 }
 
 // Service HealthCheck
@@ -554,7 +554,7 @@ func newCelloToken(provider string, tok types.Token) *token {
 
 // projectExists checks if a project exists using both the credential provider and database
 // TODO refactor so all can use this helper?
-func (h handler) projectExists(ctx context.Context, l log.Logger, credProvider credentials.ProviderV2, auth *credentials.Authorization, headers http.Header, w http.ResponseWriter, projectName string) (bool, error) {
+func (h handler) projectExists(ctx context.Context, l log.Logger, credProvider credentials.Provider, auth *credentials.Authorization, headers http.Header, w http.ResponseWriter, projectName string) (bool, error) {
 	// Checking credential provider
 	level.Debug(l).Log("message", "checking if project exists")
 

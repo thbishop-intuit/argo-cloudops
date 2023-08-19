@@ -1,4 +1,4 @@
-//go:generate moq -out ../../test/testhelpers/credsProviderMock.go -pkg testhelpers . Provider:CredsProviderMock
+//go:generate moq -out ../../test/testhelpers/credsProvider.go -pkg testhelpers . Provider:CredsProviderMock
 
 package credentials
 
@@ -19,24 +19,6 @@ import (
 const (
 	authorizationKeyAdmin = "admin"
 )
-
-// Provider defines the interface required by providers.
-type Provider interface {
-	CreateProject(string) (types.Token, error)
-	CreateTarget(string, types.Target) error
-	CreateToken(string) (types.Token, error)
-	UpdateTarget(string, types.Target) error
-	DeleteProject(string) error
-	DeleteTarget(string, string) error
-	GetProject(string) (responses.GetProject, error)
-	GetTarget(string, string) (types.Target, error)
-	GetToken() (string, error)
-	DeleteProjectToken(string, string) error
-	GetProjectToken(string, string) (types.ProjectToken, error)
-	ListTargets(string) ([]string, error)
-	ProjectExists(string) (bool, error)
-	TargetExists(string, string) (bool, error)
-}
 
 var (
 	// ErrNotFound conveys that the item was not found.
@@ -101,7 +83,7 @@ func NewAuthorization(authorizationHeader string) (*Authorization, error) {
 	return &a, nil
 }
 
-type ProviderV2 interface {
+type Provider interface {
 	CreateProject(CreateProjectArgs) (CreateProjectResponse, error)
 	CreateTarget(CreateTargetArgs) (CreateTargetResponse, error)
 	CreateToken(CreateTokenArgs) (CreateTokenResponse, error)
@@ -395,7 +377,7 @@ func (g *ProviderV2RPCClient) UpdateTarget(args UpdateTargetArgs) (UpdateTargetR
 // the requirements of net/rpc
 type ProviderV2RPCServer struct {
 	// This is the real implementation
-	Impl ProviderV2
+	Impl Provider
 }
 
 // TODO not sure if this is the best way to handle accepting/returning args
@@ -447,7 +429,7 @@ func (s *ProviderV2RPCServer) TargetExists(args TargetExistsArgs, resp *TargetEx
 // plugin connection and is a more advanced use case.
 type ProviderV2Plugin struct {
 	// Impl Injection
-	Impl ProviderV2
+	Impl Provider
 }
 
 func (p *ProviderV2Plugin) Server(*plugin.MuxBroker) (interface{}, error) {

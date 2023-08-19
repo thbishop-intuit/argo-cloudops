@@ -144,7 +144,7 @@ func newVaultSvc(auth credentials.Authorization, h http.Header) (vaultSvc, error
 }
 
 // NewVaultProvider returns a new VaultProvider
-func NewVaultProvider(a credentials.Authorization, h http.Header) (credentials.ProviderV2, error) {
+func NewVaultProvider(a credentials.Authorization, h http.Header) (credentials.Provider, error) {
 	// config := vaultConfigFn(&vault.Config{Address: env.VaultAddress}, env.VaultRole, env.VaultSecret)
 	config := NewVaultConfig(
 		&vault.Config{Address: os.Getenv("VAULT_ADDR")},

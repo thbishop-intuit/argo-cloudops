@@ -73,7 +73,7 @@ func main() {
 	// TODO not sure if this is a good way to handle these plugins (especially
 	// for cleaning up). Do we need to keep a ref to the actual client?
 	credPlugins := []string{"vault"}
-	credPluginsClients := map[string]credentials.ProviderV2{}
+	credPluginsClients := map[string]credentials.Provider{}
 
 	pluginMap := map[string]plugin.Plugin{}
 
@@ -110,7 +110,7 @@ func main() {
 			panic(fmt.Sprintf("dispense blew up: %s", err))
 		}
 
-		provider := raw.(credentials.ProviderV2)
+		provider := raw.(credentials.Provider)
 		credPluginsClients[name] = provider
 	}
 
