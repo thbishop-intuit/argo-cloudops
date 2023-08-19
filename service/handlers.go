@@ -1050,7 +1050,7 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO Perhaps this should be 404
-	if projExistOutput.Exists {
+	if !projExistOutput.Exists {
 		level.Error(l).Log("message", "project does not exist")
 		h.errorResponse(w, "project does not exist", http.StatusNotFound)
 		return
