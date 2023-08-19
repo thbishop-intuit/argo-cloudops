@@ -842,10 +842,10 @@ func TestUpdateTarget(t *testing.T) {
 // 			cpMock: &th.CredsProviderMock{
 // 				GetTokenFunc:      func() (string, error) { return testPassword, nil },
 // 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
-// TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-// 	return credentials.TargetExistsOutput{Exists: true}, nil
-// },
+// 				// TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
+// 				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
+// 					return credentials.TargetExistsOutput{Exists: true}, nil
+// 				},
 // 			},
 // 			wfMock: &th.WorkflowMock{
 // 				SubmitFunc: func(ctx context.Context, from string, parameters, labels map[string]string) (string, error) {
@@ -895,10 +895,10 @@ func TestUpdateTarget(t *testing.T) {
 // 			cpMock: &th.CredsProviderMock{
 // 				GetTokenFunc:      func() (string, error) { return testPassword, nil },
 // 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
-// TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
-// 	return credentials.TargetExistsOutput{Exists: true}, nil
-// },
+// 				// TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
+// 				TargetExistsFunc: func(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
+// 					return credentials.TargetExistsOutput{Exists: true}, nil
+// 				},
 // 			},
 // 		},
 // 		{
@@ -1221,114 +1221,116 @@ func TestListWorkflows(t *testing.T) {
 // 	runTests(t, tests)
 // }
 
-// func TestListTokens(t *testing.T) {
-// 	tests := []test{
-// 		{
-// 			name:       "fails to list tokens when not admin",
-// 			want:       http.StatusUnauthorized,
-// 			respFile:   "TestListTokens/fails_to_list_tokens_when_not_admin_response.json",
-// 			authHeader: userAuthHeader,
-// 			url:        "/projects/undeletableprojecttargets/tokens",
-// 			method:     "GET",
-// 		},
-// 		{
-// 			name:       "can list tokens",
-// 			want:       http.StatusOK,
-// 			respFile:   "TestListTokens/can_list_tokens_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/undeletableprojecttargets/tokens",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 			},
-// 			dbMock: &th.DBClientMock{
-// 				ReadProjectEntryFunc: func(ctx context.Context, p string) (db.ProjectEntry, error) {
-// 					return db.ProjectEntry{ProjectID: "project1", Repository: "repo"}, nil
-// 				},
-// 				ListTokenEntriesFunc: func(ctx context.Context, project string) ([]db.TokenEntry, error) {
-// 					return []db.TokenEntry{
-// 						{
-// 							CreatedAt: "2022-06-21T14:56:10.341066-07:00",
-// 							ExpiresAt: "2023-06-21T14:56:10.341066-07:00",
-// 							TokenID:   "ghi789",
-// 						},
-// 						{
-// 							CreatedAt: "2022-06-21T14:43:16.172896-07:00",
-// 							ExpiresAt: "2023-06-21T14:43:16.172896-07:00",
-// 							TokenID:   "def456",
-// 						},
-// 						{
-// 							CreatedAt: "2022-06-21T14:42:50.182037-07:00",
-// 							ExpiresAt: "2023-06-21T14:42:50.182037-07:00",
-// 							TokenID:   "abc123",
-// 						},
-// 					}, nil
-// 				},
-// 			},
-// 		},
-// 		{
-// 			name:       "project not found",
-// 			want:       http.StatusNotFound,
-// 			respFile:   "TestListTokens/project_not_found_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/projectdoesnotexist/tokens",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return false, nil },
-// 			},
-// 		},
-// 		{
-// 			name:       "no tokens",
-// 			want:       http.StatusOK,
-// 			respFile:   "TestListTokens/no_tokens_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/projectnotokens/tokens",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 			},
-// 			dbMock: &th.DBClientMock{
-// 				ReadProjectEntryFunc: func(ctx context.Context, p string) (db.ProjectEntry, error) {
-// 					return db.ProjectEntry{ProjectID: "abc123", Repository: "repo"}, nil
-// 				},
-// 				ListTokenEntriesFunc: func(ctx context.Context, project string) ([]db.TokenEntry, error) {
-// 					return []db.TokenEntry{}, nil
-// 				},
-// 			},
-// 		},
-// 		{
-// 			name:       "project read error",
-// 			want:       http.StatusInternalServerError,
-// 			respFile:   "TestListTokens/project_read_error_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/projectreaderror/tokens",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return false, errors.New("error retrieving project") },
-// 			},
-// 		},
-// 		{
-// 			name:       "list tokens read error",
-// 			want:       http.StatusInternalServerError,
-// 			respFile:   "TestListTokens/list_tokens_error_response.json",
-// 			authHeader: adminAuthHeader,
-// 			url:        "/projects/projectlisttokenserror/tokens",
-// 			method:     "GET",
-// 			cpMock: &th.CredsProviderMock{
-// 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
-// 			},
-// 			dbMock: &th.DBClientMock{
-// 				ReadProjectEntryFunc: func(ctx context.Context, project string) (db.ProjectEntry, error) {
-// 					return db.ProjectEntry{ProjectID: "project1"}, nil
-// 				},
-// 				ListTokenEntriesFunc: func(ctx context.Context, project string) ([]db.TokenEntry, error) {
-// 					return []db.TokenEntry{}, errors.New("error from DB")
-// 				},
-// 			},
-// 		},
-// 	}
-// 	runTests(t, tests)
-// }
+func TestListTokens(t *testing.T) {
+	tests := []test{
+		{
+			name:       "fails to list tokens when not admin",
+			want:       http.StatusUnauthorized,
+			respFile:   "TestListTokens/fails_to_list_tokens_when_not_admin_response.json",
+			authHeader: userAuthHeader,
+			url:        "/projects/undeletableprojecttargets/tokens",
+			method:     "GET",
+		},
+		{
+			name:       "can list tokens",
+			want:       http.StatusOK,
+			respFile:   "TestListTokens/can_list_tokens_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/undeletableprojecttargets/tokens",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: projExistsFunc(true),
+			},
+			dbMock: &th.DBClientMock{
+				ReadProjectEntryFunc: func(ctx context.Context, p string) (db.ProjectEntry, error) {
+					return db.ProjectEntry{ProjectID: "project1", Repository: "repo"}, nil
+				},
+				ListTokenEntriesFunc: func(ctx context.Context, project string) ([]db.TokenEntry, error) {
+					return []db.TokenEntry{
+						{
+							CreatedAt: "2022-06-21T14:56:10.341066-07:00",
+							ExpiresAt: "2023-06-21T14:56:10.341066-07:00",
+							TokenID:   "ghi789",
+						},
+						{
+							CreatedAt: "2022-06-21T14:43:16.172896-07:00",
+							ExpiresAt: "2023-06-21T14:43:16.172896-07:00",
+							TokenID:   "def456",
+						},
+						{
+							CreatedAt: "2022-06-21T14:42:50.182037-07:00",
+							ExpiresAt: "2023-06-21T14:42:50.182037-07:00",
+							TokenID:   "abc123",
+						},
+					}, nil
+				},
+			},
+		},
+		{
+			name:       "project not found",
+			want:       http.StatusNotFound,
+			respFile:   "TestListTokens/project_not_found_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectdoesnotexist/tokens",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: projExistsFunc(false),
+			},
+		},
+		{
+			name:       "no tokens",
+			want:       http.StatusOK,
+			respFile:   "TestListTokens/no_tokens_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectnotokens/tokens",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: projExistsFunc(true),
+			},
+			dbMock: &th.DBClientMock{
+				ReadProjectEntryFunc: func(ctx context.Context, p string) (db.ProjectEntry, error) {
+					return db.ProjectEntry{ProjectID: "abc123", Repository: "repo"}, nil
+				},
+				ListTokenEntriesFunc: func(ctx context.Context, project string) ([]db.TokenEntry, error) {
+					return []db.TokenEntry{}, nil
+				},
+			},
+		},
+		{
+			name:       "project read error",
+			want:       http.StatusInternalServerError,
+			respFile:   "TestListTokens/project_read_error_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectreaderror/tokens",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: func(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+					return credentials.ProjectExistsOutput{}, errors.New("error retrieving project")
+				},
+			},
+		},
+		{
+			name:       "list tokens read error",
+			want:       http.StatusInternalServerError,
+			respFile:   "TestListTokens/list_tokens_error_response.json",
+			authHeader: adminAuthHeader,
+			url:        "/projects/projectlisttokenserror/tokens",
+			method:     "GET",
+			cpMock: &th.CredsProviderMock{
+				ProjectExistsFunc: projExistsFunc(true),
+			},
+			dbMock: &th.DBClientMock{
+				ReadProjectEntryFunc: func(ctx context.Context, project string) (db.ProjectEntry, error) {
+					return db.ProjectEntry{ProjectID: "project1"}, nil
+				},
+				ListTokenEntriesFunc: func(ctx context.Context, project string) ([]db.TokenEntry, error) {
+					return []db.TokenEntry{}, errors.New("error from DB")
+				},
+			},
+		},
+	}
+	runTests(t, tests)
+}
 
 func TestHealthCheck(t *testing.T) {
 	tests := []struct {
