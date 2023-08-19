@@ -298,7 +298,7 @@ func (g *ProviderV2RPCClient) CreateProject(args CreateProjectArgs) (CreateProje
 
 func (g *ProviderV2RPCClient) CreateTarget(args CreateTargetArgs) (CreateTargetResponse, error) {
 	var resp CreateTargetResponse
-	err := g.client.Call("Plugin.CreateProject", args, &resp)
+	err := g.client.Call("Plugin.CreateTarget", args, &resp)
 	return resp, err
 }
 
@@ -413,6 +413,12 @@ func (s *ProviderV2RPCServer) CreateTarget(args CreateTargetArgs, resp *CreateTa
 
 func (s *ProviderV2RPCServer) CreateToken(args CreateTokenArgs, resp *CreateTokenResponse) error {
 	v, err := s.Impl.CreateToken(args)
+	*resp = v
+	return err
+}
+
+func (s *ProviderV2RPCServer) GetToken(args GetTokenArgs, resp *GetTokenResponse) error {
+	v, err := s.Impl.GetToken(args)
 	*resp = v
 	return err
 }

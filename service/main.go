@@ -15,6 +15,7 @@ import (
 	"github.com/cello-proj/cello/service/internal/env"
 	"github.com/cello-proj/cello/service/internal/git"
 	"github.com/cello-proj/cello/service/internal/workflow"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 
 	"github.com/argoproj/argo-workflows/v3/cmd/argo/commands/client"
@@ -81,13 +82,19 @@ func main() {
 
 	}
 
+	pluginLogger := hclog.New(&hclog.LoggerOptions{
+		Name:   "plugin",
+		Output: os.Stdout,
+		Level:  hclog.Debug,
+	})
+
 	for _, name := range credPlugins {
 		client := plugin.NewClient(&plugin.ClientConfig{
 			HandshakeConfig: handshakeConfig,
 			Plugins:         pluginMap,
 			// TODO update to be dynamic
-			Cmd: exec.Command(fmt.Sprintf("./build/plugin/%s", name)),
-			// Logger:          logger,
+			Cmd:    exec.Command(fmt.Sprintf("./build/plugin/%s", name)),
+			Logger: pluginLogger,
 		})
 		// credPluginsClients[name] = client
 		defer client.Kill()

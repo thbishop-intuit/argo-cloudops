@@ -1,7 +1,11 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/cello-proj/cello/service/internal/credentials"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 )
 
@@ -17,8 +21,15 @@ var handshakeConfig = plugin.HandshakeConfig{
 
 func main() {
 
+	log.Println("Starting vault plugin stdlogger")
+
+	logger := hclog.New(&hclog.LoggerOptions{
+		Output: os.Stderr,
+		Level:  hclog.Debug,
+	})
 	vault := &VaultProvider{
 		vaultSvcFn: newVaultSvc,
+		logger:     logger,
 	}
 	// pluginMap is the map of plugins we can dispense.
 	var pluginMap = map[string]plugin.Plugin{

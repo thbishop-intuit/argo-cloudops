@@ -3,12 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/cello-proj/cello/internal/types"
 	"github.com/cello-proj/cello/service/internal/credentials"
+	"github.com/hashicorp/go-hclog"
 	vault "github.com/hashicorp/vault/api"
 )
 
@@ -115,6 +117,7 @@ func (v *vaultSvc) readSecretIDAccessor(appRoleName, accessor string) (*vault.Se
 type VaultProvider struct {
 	vaultSvcFn func(auth credentials.Authorization, h http.Header) (vaultSvc, error)
 	// TODO unwind this along with new provider, etc?
+	logger          hclog.Logger
 	roleID          string
 	secretID        string
 	vaultLogicalSvc vaultLogical
@@ -290,6 +293,7 @@ func (v *VaultProvider) CreateProject(args credentials.CreateProjectArgs) (crede
 // TODO validate policy and other information is correct in target
 // TODO Validate role exists (if possible, etc)
 func (v *VaultProvider) CreateTarget(args credentials.CreateTargetArgs) (credentials.CreateTargetResponse, error) {
+	log.Println("inside create target vault plugin - stdlogger")
 	resp := credentials.CreateTargetResponse{}
 
 	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
@@ -408,9 +412,14 @@ func (v *VaultProvider) GetTarget(args credentials.GetTargetArgs) (credentials.G
 		return resp, err
 	}
 
-	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to get target information")
-	}
+	// TODO we previously had this, but it's also used to make sure the
+	// target exists when creating a workflow (which is not using admin
+	// credentials). When we migrate authorization out of the credential
+	// providers, this check will be elevated in the call stack so this
+	// won't be an issue.
+	// if !svc.isAdmin() {
+	// 	return resp, errors.New("admin credentials must be used to get target information")
+	// }
 
 	sec, err := svc.vaultLogicalSvc.Read(fmt.Sprintf("aws/roles/argo-cloudops-projects-%s-target-%s", projName, targetName))
 	if err != nil {
@@ -525,9 +534,14 @@ func (v *VaultProvider) GetToken(args credentials.GetTokenArgs) (credentials.Get
 	}
 
 	options := map[string]interface{}{
-		"role_id":   v.roleID,
-		"secret_id": v.secretID,
+		// "role_id":   v.roleID,
+		// "secret_id": v.secretID,
+		"role_id":   svc.roleID,
+		"secret_id": svc.secretID,
 	}
+
+	println(fmt.Sprintf("role_id: %s", v.roleID))
+	println(fmt.Sprintf("secret_id: %s", v.secretID))
 
 	sec, err := svc.vaultLogicalSvc.Write("auth/approle/login", options)
 	if err != nil {

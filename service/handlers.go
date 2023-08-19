@@ -51,8 +51,7 @@ func generateErrorResponseJSON(message string) string {
 
 // HTTP handler
 type handler struct {
-	logger log.Logger
-	// newCredentialsProvider func(a credentials.Authorization, env env.Vars, h http.Header, vaultConfig credentials.VaultConfigFn, fn credentials.VaultSvcFn) (credentials.Provider, error)
+	logger             log.Logger
 	argo               workflow.Workflow
 	argoCtx            context.Context
 	config             *Config
@@ -856,6 +855,8 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		level.Error(l).Log("message", "error reading request data", "error", err)
 		h.errorResponse(w, "error reading request data", http.StatusInternalServerError)
+		// TODO why was this missing?
+		return
 	}
 
 	if err := json.Unmarshal(reqBody, &ctr); err != nil {
@@ -875,6 +876,7 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	level.Debug(l).Log("message", "creating credential provider")
 	credProvider := h.credentialsPlugins["vault"]
 
+	// TODO should we check this first?
 	projExistArgs := credentials.ProjectExistsArgs{
 		Authorization: *a,
 		Headers:       r.Header,
@@ -889,7 +891,7 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO Perhaps this should be 404
-	if projExistResp.Exists {
+	if !projExistResp.Exists {
 		level.Error(l).Log("message", "project does not exist")
 		h.errorResponse(w, "project does not exist", http.StatusBadRequest)
 		return
@@ -920,16 +922,17 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	createTargetArgs := credentials.CreateTargetArgs{
 		Authorization: *a,
 		Headers:       r.Header,
-		ProjectName:   ctr.Name,
+		ProjectName:   projectName,
 		Target:        types.Target(ctr),
 	}
 
-	// err = cp.CreateTarget(projectName, types.Target(ctr))
 	if _, err := credProvider.CreateTarget(createTargetArgs); err != nil {
 		level.Error(l).Log("message", "error creating target", "error", err)
 		h.errorResponse(w, "error creating target", http.StatusInternalServerError)
 		return
 	}
+
+	level.Debug(l).Log("message", "target created")
 	fmt.Fprint(w, "{}")
 }
 
