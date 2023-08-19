@@ -299,60 +299,60 @@ func (h handler) createWorkflowFromRequest(_ context.Context, w http.ResponseWri
 	credProvider := h.credentialsPlugins["vault"]
 
 	level.Debug(l).Log("message", "getting credentials provider token")
-	getTokenArgs := credentials.GetTokenArgs{
+	getTokenInput := credentials.GetTokenInput{
 		Authorization: *a,
 		Headers:       r.Header,
 	}
 
 	// TODO should we check project and token exists first?
-	getTokenResp, err := credProvider.GetToken(getTokenArgs)
+	getTokenOutput, err := credProvider.GetToken(getTokenInput)
 	if err != nil {
 		level.Error(l).Log("message", "error getting credentials provider token", "error", err)
 		h.errorResponse(w, "error retrieving credentials provider token", http.StatusInternalServerError)
 		return
 	}
 
-	projectExistsArgs := credentials.ProjectExistsArgs{
+	projectExistsInput := credentials.ProjectExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   cwr.ProjectName,
 	}
 
 	// TODO why doesn't this use our handler helper 'projectExists'?
-	projectExistsResp, err := credProvider.ProjectExists(projectExistsArgs)
+	projectExistsOutput, err := credProvider.ProjectExists(projectExistsInput)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	if !projectExistsResp.Exists {
+	if !projectExistsOutput.Exists {
 		level.Error(l).Log("message", "project does not exist", "error", err)
 		h.errorResponse(w, "project does not exist", http.StatusBadRequest)
 		return
 	}
 
-	targetExistArgs := credentials.TargetExistsArgs{
+	targetExistInput := credentials.TargetExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   cwr.ProjectName,
 		TargetName:    cwr.TargetName,
 	}
 
-	targetExistsResp, err := credProvider.TargetExists(targetExistArgs)
+	targetExistsOutput, err := credProvider.TargetExists(targetExistInput)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target", "error", err)
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
 
-	if !targetExistsResp.Exists {
+	if !targetExistsOutput.Exists {
 		level.Error(l).Log("message", "target not found")
 		h.errorResponse(w, "target not found", http.StatusBadRequest)
 		return
 	}
 
-	credentialsToken := getTokenResp.Token
+	credentialsToken := getTokenOutput.Token
 
 	level.Debug(l).Log("message", "creating workflow parameters")
 	parameters := workflow.NewParameters(environmentVariablesString, executeCommand, executeContainerImageURI, cwr.TargetName, cwr.ProjectName, cwr.Parameters, credentialsToken)
@@ -437,35 +437,22 @@ func (h handler) getTarget(w http.ResponseWriter, r *http.Request) {
 
 	level.Debug(l).Log("message", "creating credential provider")
 	credProvider := h.credentialsPlugins["vault"]
-	// cp, err := h.newCredentialsProvider(*a, h.env, r.Header, credentials.NewVaultConfig, credentials.NewVaultSvc)
-	// if err != nil {
-	// 	level.Error(l).Log("message", "error creating credentials provider", "error", err)
-	// 	h.errorResponse(w, "error creating credentials provider", http.StatusInternalServerError)
-	// 	return
-	// }
 
-	targetExistsArgs := credentials.TargetExistsArgs{
+	targetExistsInput := credentials.TargetExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 		TargetName:    targetName,
 	}
 
-	targetExistResp, err := credProvider.TargetExists(targetExistsArgs)
+	targetExistOutput, err := credProvider.TargetExists(targetExistsInput)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target", "error", err)
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
 
-	// targetExists, err := cp.TargetExists(projectName, targetName)
-	// if err != nil {
-	// 	level.Error(l).Log("message", "error retrieving target", "error", err)
-	// 	h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
-	// 	return
-	// }
-
-	if !targetExistResp.Exists {
+	if !targetExistOutput.Exists {
 		level.Error(l).Log("message", "target not found")
 		h.errorResponse(w, "target not found", http.StatusNotFound)
 		return
@@ -473,25 +460,19 @@ func (h handler) getTarget(w http.ResponseWriter, r *http.Request) {
 
 	level.Debug(l).Log("message", "getting target information")
 
-	getTargetArgs := credentials.GetTargetArgs{
+	getTargetInput := credentials.GetTargetInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 		TargetName:    targetName,
 	}
 
-	targetInfo, err := credProvider.GetTarget(getTargetArgs)
+	targetInfo, err := credProvider.GetTarget(getTargetInput)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target information", "error", err)
 		h.errorResponse(w, "error retrieving target information", http.StatusInternalServerError)
 
 	}
-	// targetInfo, err := cp.GetTarget(projectName, targetName)
-	// if err != nil {
-	// 	level.Error(l).Log("message", "error retrieving target information", "error", err)
-	// 	h.errorResponse(w, "error retrieving target information", http.StatusInternalServerError)
-	// 	return
-	// }
 
 	jsonResult, err := json.Marshal(targetInfo)
 	if err != nil {
@@ -558,20 +539,20 @@ func (h handler) projectExists(ctx context.Context, l log.Logger, credProvider c
 	// Checking credential provider
 	level.Debug(l).Log("message", "checking if project exists")
 
-	projectExistsArgs := credentials.ProjectExistsArgs{
+	projectExistsInput := credentials.ProjectExistsInput{
 		Authorization: *auth,
 		Headers:       headers,
 		ProjectName:   projectName,
 	}
 
-	projectExistsResp, err := credProvider.ProjectExists(projectExistsArgs)
+	projectExistsOutput, err := credProvider.ProjectExists(projectExistsInput)
 	if err != nil {
 		level.Error(l).Log("message", "error checking credentials provider for project", "error", err)
 		h.errorResponse(w, "error retrieving project", http.StatusInternalServerError)
 		return false, err
 	}
 
-	if !projectExistsResp.Exists {
+	if !projectExistsOutput.Exists {
 		level.Debug(l).Log("message", "project does not exist in credentials provider")
 		h.errorResponse(w, "project does not exist", http.StatusNotFound)
 		return false, err
@@ -634,20 +615,20 @@ func (h handler) createProject(w http.ResponseWriter, r *http.Request) {
 	// TODO better way to do this?
 	credProvider := h.credentialsPlugins["vault"]
 
-	projExistArgs := credentials.ProjectExistsArgs{
+	projExistInput := credentials.ProjectExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   capp.Name,
 	}
 
-	projExistResp, err := credProvider.ProjectExists(projExistArgs)
+	projExistOutput, err := credProvider.ProjectExists(projExistInput)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	if projExistResp.Exists {
+	if projExistOutput.Exists {
 		level.Error(l).Log("error", "project already exists")
 		h.errorResponse(w, "project already exists", http.StatusBadRequest)
 		return
@@ -666,21 +647,21 @@ func (h handler) createProject(w http.ResponseWriter, r *http.Request) {
 
 	level.Debug(l).Log("message", "creating project")
 
-	createProjReq := credentials.CreateProjectArgs{
+	createProjReq := credentials.CreateProjectInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   capp.Name,
 	}
 
 	// token, err := cp.CreateProject(capp.Name)
-	createProjResp, err := credProvider.CreateProject(createProjReq)
+	createProjOutput, err := credProvider.CreateProject(createProjReq)
 	if err != nil {
 		level.Error(l).Log("message", "error creating project", "error", err)
 		h.errorResponse(w, "error creating project", http.StatusInternalServerError)
 		return
 	}
 
-	token := createProjResp.Token
+	token := createProjOutput.Token
 
 	level.Debug(l).Log("message", "inserting token into DB")
 	err = h.dbClient.CreateTokenEntry(ctx, token)
@@ -774,48 +755,48 @@ func (h handler) deleteProject(w http.ResponseWriter, r *http.Request) {
 	credProvider := h.credentialsPlugins["vault"]
 
 	level.Debug(l).Log("message", "checking if project exists")
-	projExistArgs := credentials.ProjectExistsArgs{
+	projExistInput := credentials.ProjectExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 	}
 
-	projExistResp, err := credProvider.ProjectExists(projExistArgs)
+	projExistOutput, err := credProvider.ProjectExists(projExistInput)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	if !projExistResp.Exists {
+	if !projExistOutput.Exists {
 		level.Debug(l).Log("message", "no action required because project does not exist")
 		return
 	}
 
 	level.Debug(l).Log("message", "getting all targets in project")
-	listTargetsArgs := credentials.ListTargetsArgs{
+	listTargetsInput := credentials.ListTargetsInput{
 		ProjectName: projectName,
 	}
 
-	listTargetsResp, err := credProvider.ListTargets(listTargetsArgs)
+	listTargetsOutput, err := credProvider.ListTargets(listTargetsInput)
 	if err != nil {
 		level.Error(l).Log("message", "error getting all targets", "error", err)
 		h.errorResponse(w, "error getting all targets", http.StatusInternalServerError)
 		return
 	}
 
-	if len(listTargetsResp.Targets) > 0 {
+	if len(listTargetsOutput.Targets) > 0 {
 		level.Error(l).Log("error", "project has existing targets, not deleting")
 		h.errorResponse(w, "project has existing targets, not deleting", http.StatusBadRequest)
 		return
 	}
 
 	level.Debug(l).Log("message", "deleting project")
-	deleteProjectArgs := credentials.DeleteProjectArgs{
+	deleteProjectInput := credentials.DeleteProjectInput{
 		ProjectName: projectName,
 	}
 
-	_, err = credProvider.DeleteProject(deleteProjectArgs)
+	_, err = credProvider.DeleteProject(deleteProjectInput)
 	if err != nil {
 		level.Error(l).Log("message", "error deleting project", "error", err)
 		h.errorResponse(w, "error deleting project", http.StatusInternalServerError)
@@ -877,13 +858,13 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	credProvider := h.credentialsPlugins["vault"]
 
 	// TODO should we check this first?
-	projExistArgs := credentials.ProjectExistsArgs{
+	projExistInput := credentials.ProjectExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 	}
 
-	projExistResp, err := credProvider.ProjectExists(projExistArgs)
+	projExistOutput, err := credProvider.ProjectExists(projExistInput)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
@@ -891,42 +872,41 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO Perhaps this should be 404
-	if !projExistResp.Exists {
+	if !projExistOutput.Exists {
 		level.Error(l).Log("message", "project does not exist")
 		h.errorResponse(w, "project does not exist", http.StatusBadRequest)
 		return
 	}
 
-	// targetExists, err := cp.TargetExists(projectName, ctr.Name)
-	targetExistArgs := credentials.TargetExistsArgs{
+	targetExistInput := credentials.TargetExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 		TargetName:    ctr.Name,
 	}
 
-	targetExistsResp, err := credProvider.TargetExists(targetExistArgs)
+	targetExistsOutput, err := credProvider.TargetExists(targetExistInput)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target", "error", err)
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
 
-	if targetExistsResp.Exists {
+	if targetExistsOutput.Exists {
 		level.Error(l).Log("message", "target name must not already exist")
 		h.errorResponse(w, "target name must not already exist", http.StatusBadRequest)
 		return
 	}
 
 	level.Debug(l).Log("message", "creating target")
-	createTargetArgs := credentials.CreateTargetArgs{
+	createTargetInput := credentials.CreateTargetInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 		Target:        types.Target(ctr),
 	}
 
-	if _, err := credProvider.CreateTarget(createTargetArgs); err != nil {
+	if _, err := credProvider.CreateTarget(createTargetInput); err != nil {
 		level.Error(l).Log("message", "error creating target", "error", err)
 		h.errorResponse(w, "error creating target", http.StatusInternalServerError)
 		return
@@ -960,13 +940,13 @@ func (h handler) deleteTarget(w http.ResponseWriter, r *http.Request) {
 	credProvider := h.credentialsPlugins["vault"]
 
 	level.Debug(l).Log("message", "deleting target")
-	deleteTargetArgs := credentials.DeleteTargetArgs{
+	deleteTargetInput := credentials.DeleteTargetInput{
 		ProjectName: projectName,
 		TargetName:  targetName,
 	}
 
 	// TODO don't need the response?
-	_, err = credProvider.DeleteTarget(deleteTargetArgs)
+	_, err = credProvider.DeleteTarget(deleteTargetInput)
 	if err != nil {
 		level.Error(l).Log("message", "error deleting target", "error", err)
 		h.errorResponse(w, "error deleting target", http.StatusInternalServerError)
@@ -997,33 +977,33 @@ func (h handler) listTargets(w http.ResponseWriter, r *http.Request) {
 	credProvider := h.credentialsPlugins["vault"]
 
 	level.Debug(l).Log("message", "checking if project exists")
-	projExistArgs := credentials.ProjectExistsArgs{
+	projExistInput := credentials.ProjectExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 	}
 
-	projExistResp, err := credProvider.ProjectExists(projExistArgs)
+	projExistOutput, err := credProvider.ProjectExists(projExistInput)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	if !projExistResp.Exists {
+	if !projExistOutput.Exists {
 		level.Debug(l).Log("message", "project does not exist")
 		h.errorResponse(w, "project does not exist", http.StatusNotFound)
 		return
 	}
 
 	level.Debug(l).Log("message", "getting all targets in project")
-	listTargetsArgs := credentials.ListTargetsArgs{
+	listTargetsInput := credentials.ListTargetsInput{
 		ProjectName: projectName,
 	}
 
-	listTargetsResp, err := credProvider.ListTargets(listTargetsArgs)
+	listTargetsOutput, err := credProvider.ListTargets(listTargetsInput)
 
-	data, err := json.Marshal(listTargetsResp.Targets)
+	data, err := json.Marshal(listTargetsOutput.Targets)
 	if err != nil {
 		level.Error(l).Log("message", "error serializing targets", "error", err)
 		h.errorResponse(w, "error listing targets", http.StatusInternalServerError)
@@ -1056,13 +1036,13 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 	level.Debug(l).Log("message", "creating credential provider")
 	credProvider := h.credentialsPlugins["vault"]
 
-	projExistArgs := credentials.ProjectExistsArgs{
+	projExistInput := credentials.ProjectExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 	}
 
-	projExistResp, err := credProvider.ProjectExists(projExistArgs)
+	projExistOutput, err := credProvider.ProjectExists(projExistInput)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
@@ -1070,18 +1050,18 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO Perhaps this should be 404
-	if projExistResp.Exists {
+	if projExistOutput.Exists {
 		level.Error(l).Log("message", "project does not exist")
 		h.errorResponse(w, "project does not exist", http.StatusNotFound)
 		return
 	}
 
-	targetExistsArgs := credentials.TargetExistsArgs{
+	targetExistsInput := credentials.TargetExistsInput{
 		ProjectName: projectName,
 		TargetName:  targetName,
 	}
 
-	targetExistsResp, err := credProvider.TargetExists(targetExistsArgs)
+	targetExistsOutput, err := credProvider.TargetExists(targetExistsInput)
 
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving target", "error", err)
@@ -1089,25 +1069,25 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !targetExistsResp.Exists {
+	if !targetExistsOutput.Exists {
 		level.Error(l).Log("message", "target not found")
 		h.errorResponse(w, "target not found", http.StatusNotFound)
 		return
 	}
 
-	getTargetArgs := credentials.GetTargetArgs{
+	getTargetInput := credentials.GetTargetInput{
 		ProjectName: projectName,
 		TargetName:  targetName,
 	}
 
-	getTargetResp, err := credProvider.GetTarget(getTargetArgs)
+	getTargetOutput, err := credProvider.GetTarget(getTargetInput)
 	if err != nil {
 		level.Error(l).Log("message", "error retrieving existing target")
 		h.errorResponse(w, "error retrieving target", http.StatusInternalServerError)
 		return
 	}
 
-	targetType := getTargetResp.Target.Type
+	targetType := getTargetOutput.Target.Type
 
 	level.Debug(l).Log("message", "reading request body")
 	reqBody, err := io.ReadAll(r.Body)
@@ -1119,35 +1099,35 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 
 	// merge request data into existing target struct for update data
 	// TODO we're currently just overwriting. do we need to do something different now?
-	if err := json.Unmarshal(reqBody, &getTargetResp.Target); err != nil {
+	if err := json.Unmarshal(reqBody, &getTargetOutput.Target); err != nil {
 		level.Error(l).Log("message", "error reading target properties data", "error", err)
 		h.errorResponse(w, "error reading target properties data", http.StatusInternalServerError)
 		return
 	}
 	// overwrite updated target with existing target name and type values so request body doesn't overwrite these values
-	getTargetResp.Target.Name = targetName
-	getTargetResp.Target.Type = targetType
+	getTargetOutput.Target.Name = targetName
+	getTargetOutput.Target.Type = targetType
 
-	if err := getTargetResp.Target.Validate(); err != nil {
+	if err := getTargetOutput.Target.Validate(); err != nil {
 		level.Error(l).Log("message", "error invalid request", "error", err)
 		h.errorResponse(w, fmt.Sprintf("invalid request, %s", err), http.StatusBadRequest)
 		return
 	}
 
 	level.Debug(l).Log("message", "updating target")
-	updateTargetArgs := credentials.UpdateTargetArgs{
+	updateTargetInput := credentials.UpdateTargetInput{
 		ProjectName: projectName,
-		Target:      getTargetResp.Target,
+		Target:      getTargetOutput.Target,
 	}
 
-	_, err = credProvider.UpdateTarget(updateTargetArgs)
+	_, err = credProvider.UpdateTarget(updateTargetInput)
 	if err != nil {
 		level.Error(l).Log("message", "error updating target", "error", err)
 		h.errorResponse(w, "error updating target", http.StatusInternalServerError)
 		return
 	}
 
-	data, err := json.Marshal(getTargetResp.Target)
+	data, err := json.Marshal(getTargetOutput.Target)
 	if err != nil {
 		level.Error(l).Log("message", "error creating response", "error", err)
 		h.errorResponse(w, "error creating response object", http.StatusInternalServerError)
@@ -1184,34 +1164,34 @@ func (h handler) deleteToken(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	level.Debug(l).Log("message", "checking if project exists")
-	projExistArgs := credentials.ProjectExistsArgs{
+	projExistInput := credentials.ProjectExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 	}
 
-	projExistResp, err := credProvider.ProjectExists(projExistArgs)
+	projExistOutput, err := credProvider.ProjectExists(projExistInput)
 	if err != nil {
 		level.Error(l).Log("message", "error checking project", "error", err)
 		h.errorResponse(w, "error checking project", http.StatusInternalServerError)
 		return
 	}
 
-	if !projExistResp.Exists {
+	if !projExistOutput.Exists {
 		// TODO should be a warn?
 		level.Error(l).Log("error", "project does not exist")
 		return
 	}
 
 	// check if token exists in CP and DB
-	projTokenExistsArgs := credentials.ProjectTokenExistsArgs{
+	projTokenExistsInput := credentials.ProjectTokenExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 		TokenID:       tokenID,
 	}
 
-	projTokenExistsResp, err := credProvider.ProjectTokenExists(projTokenExistsArgs)
+	projTokenExistsOutput, err := credProvider.ProjectTokenExists(projTokenExistsInput)
 	if err != nil {
 		// do not return an error if project token is not found
 		if !errors.Is(err, credentials.ErrProjectTokenNotFound) {
@@ -1245,16 +1225,16 @@ func (h handler) deleteToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// only delete token if exists in CP
-	if projTokenExistsResp.Exists {
+	if projTokenExistsOutput.Exists {
 		level.Debug(l).Log("message", "deleting token from credentials provider")
-		deleteProjTokenArgs := credentials.DeleteProjectTokenArgs{
+		deleteProjTokenInput := credentials.DeleteProjectTokenInput{
 			Authorization: *a,
 			Headers:       r.Header,
 			ProjectName:   projectName,
 			TokenID:       tokenID,
 		}
 
-		if _, err := credProvider.DeleteProjectToken(deleteProjTokenArgs); err != nil {
+		if _, err := credProvider.DeleteProjectToken(deleteProjTokenInput); err != nil {
 			level.Error(l).Log("message", "error deleting token from credentials provider", "error", err)
 			h.errorResponse(w, "error deleting token", http.StatusInternalServerError)
 			return
@@ -1306,20 +1286,20 @@ func (h handler) createToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	level.Debug(l).Log("message", "creating token")
-	createTokenArgs := credentials.CreateTokenArgs{
+	createTokenInput := credentials.CreateTokenInput{
 		Authorization: *a,
 		Headers:       r.Header,
 		ProjectName:   projectName,
 	}
 
-	createTokenResp, err := credProvider.CreateToken(createTokenArgs)
+	createTokenOutput, err := credProvider.CreateToken(createTokenInput)
 	if err != nil {
 		level.Error(l).Log("message", "error creating token with credentials provider", "error", err)
 		h.errorResponse(w, "error creating token with credentials provider", http.StatusInternalServerError)
 		return
 	}
 
-	token := createTokenResp.Token
+	token := createTokenOutput.Token
 
 	level.Debug(l).Log("message", "inserting into db")
 	err = h.dbClient.CreateTokenEntry(ctx, token)

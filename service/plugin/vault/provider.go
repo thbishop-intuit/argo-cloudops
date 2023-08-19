@@ -211,35 +211,35 @@ func genProjectAppRole(name string) string {
 	return fmt.Sprintf("%s/%s-%s", vaultAppRolePrefix, vaultProjectPrefix, name)
 }
 
-func (v *VaultProvider) CreateToken(args credentials.CreateTokenArgs) (credentials.CreateTokenResponse, error) {
-	resp := credentials.CreateTokenResponse{}
-	projectName := args.ProjectName
+func (v *VaultProvider) CreateToken(input credentials.CreateTokenInput) (credentials.CreateTokenOutput, error) {
+	output := credentials.CreateTokenOutput{}
+	projectName := input.ProjectName
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to create token")
+		return output, errors.New("admin credentials must be used to create token")
 	}
 
 	secret, err := svc.generateSecrets(projectName)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	roleID, err := svc.readRoleID(projectName)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	accessor, err := svc.readSecretIDAccessor(projectName, secret.Data["secret_id_accessor"].(string))
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
-	resp.Token = types.Token{
+	output.Token = types.Token{
 		ProjectID: projectName,
 		Secret:    secret.Data["secret_id"].(string),
 		ProjectToken: types.ProjectToken{
@@ -250,63 +250,63 @@ func (v *VaultProvider) CreateToken(args credentials.CreateTokenArgs) (credentia
 		ExpiresAt: accessor.Data["expiration_time"].(string),
 	}
 
-	return resp, nil
+	return output, nil
 }
 
-func (v *VaultProvider) CreateProject(args credentials.CreateProjectArgs) (credentials.CreateProjectResponse, error) {
-	name := args.ProjectName
-	resp := credentials.CreateProjectResponse{}
+func (v *VaultProvider) CreateProject(input credentials.CreateProjectInput) (credentials.CreateProjectOutput, error) {
+	name := input.ProjectName
+	output := credentials.CreateProjectOutput{}
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to create project")
+		return output, errors.New("admin credentials must be used to create project")
 	}
 
 	policy := defaultVaultReadonlyPolicyAWS(name)
 	if err = svc.createPolicyState(name, policy); err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if err := svc.writeProjectState(name); err != nil {
-		return resp, err
+		return output, err
 	}
 
-	token, err := v.CreateToken(credentials.CreateTokenArgs{
-		Authorization: args.Authorization,
-		Headers:       args.Headers,
+	token, err := v.CreateToken(credentials.CreateTokenInput{
+		Authorization: input.Authorization,
+		Headers:       input.Headers,
 		ProjectName:   name,
 	})
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
-	resp.Token = token.Token
+	output.Token = token.Token
 
-	return resp, nil
+	return output, nil
 }
 
 // CreateTarget creates a target for the project.
 // TODO validate policy and other information is correct in target
 // TODO Validate role exists (if possible, etc)
-func (v *VaultProvider) CreateTarget(args credentials.CreateTargetArgs) (credentials.CreateTargetResponse, error) {
+func (v *VaultProvider) CreateTarget(input credentials.CreateTargetInput) (credentials.CreateTargetOutput, error) {
 	log.Println("inside create target vault plugin - stdlogger")
-	resp := credentials.CreateTargetResponse{}
+	output := credentials.CreateTargetOutput{}
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to create target")
+		return output, errors.New("admin credentials must be used to create target")
 	}
 
-	projectName := args.ProjectName
-	target := args.Target
+	projectName := input.ProjectName
+	target := input.Target
 
 	options := map[string]interface{}{
 		"credential_type": target.Properties.CredentialType,
@@ -317,7 +317,7 @@ func (v *VaultProvider) CreateTarget(args credentials.CreateTargetArgs) (credent
 
 	path := fmt.Sprintf("aws/roles/%s-%s-target-%s", vaultProjectPrefix, projectName, target.Name)
 	_, err = svc.vaultLogicalSvc.Write(path, options)
-	return resp, err
+	return output, err
 }
 
 func defaultVaultReadonlyPolicyAWS(projectName string) string {
@@ -327,47 +327,47 @@ func defaultVaultReadonlyPolicyAWS(projectName string) string {
 	)
 }
 
-func (v *VaultProvider) DeleteProject(args credentials.DeleteProjectArgs) (credentials.DeleteProjectResponse, error) {
-	resp := credentials.DeleteProjectResponse{}
-	projectName := args.ProjectName
+func (v *VaultProvider) DeleteProject(input credentials.DeleteProjectInput) (credentials.DeleteProjectOutput, error) {
+	output := credentials.DeleteProjectOutput{}
+	projectName := input.ProjectName
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to delete projects")
+		return output, errors.New("admin credentials must be used to delete projects")
 	}
 
 	if err := svc.vaultSysSvc.DeletePolicy(fmt.Sprintf("%s-%s", vaultProjectPrefix, projectName)); err != nil {
-		return resp, fmt.Errorf("vault delete project error: %w", err)
+		return output, fmt.Errorf("vault delete project error: %w", err)
 	}
 
 	if _, err = svc.vaultLogicalSvc.Delete(genProjectAppRole(projectName)); err != nil {
-		return resp, fmt.Errorf("vault delete project error: %w", err)
+		return output, fmt.Errorf("vault delete project error: %w", err)
 	}
 
-	return resp, nil
+	return output, nil
 }
 
-func (v *VaultProvider) DeleteTarget(args credentials.DeleteTargetArgs) (credentials.DeleteTargetResponse, error) {
-	projectName := args.ProjectName
-	targetName := args.ProjectName
-	resp := credentials.DeleteTargetResponse{}
+func (v *VaultProvider) DeleteTarget(input credentials.DeleteTargetInput) (credentials.DeleteTargetOutput, error) {
+	projectName := input.ProjectName
+	targetName := input.ProjectName
+	output := credentials.DeleteTargetOutput{}
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to delete targets")
+		return output, errors.New("admin credentials must be used to delete targets")
 	}
 
 	path := fmt.Sprintf("aws/roles/%s-%s-target-%s", vaultProjectPrefix, projectName, targetName)
 	_, err = svc.vaultLogicalSvc.Delete(path)
-	return resp, err
+	return output, err
 }
 
 const (
@@ -379,37 +379,37 @@ const (
 )
 
 // TODO this does not require admin credentials; should it?
-func (v *VaultProvider) GetProject(args credentials.GetProjectArgs) (credentials.GetProjectResponse, error) {
-	name := args.ProjectName
-	resp := credentials.GetProjectResponse{}
+func (v *VaultProvider) GetProject(input credentials.GetProjectInput) (credentials.GetProjectOutput, error) {
+	name := input.ProjectName
+	output := credentials.GetProjectOutput{}
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	sec, err := svc.vaultLogicalSvc.Read(genProjectAppRole(name))
 	if err != nil {
-		return resp, fmt.Errorf("vault get project error: %w", err)
+		return output, fmt.Errorf("vault get project error: %w", err)
 	}
 
 	if sec == nil {
-		return resp, ErrNotFound
+		return output, ErrNotFound
 	}
 
-	resp.Project.Name = name
+	output.Project.Name = name
 
-	return resp, nil
+	return output, nil
 }
 
-func (v *VaultProvider) GetTarget(args credentials.GetTargetArgs) (credentials.GetTargetResponse, error) {
-	projName := args.ProjectName
-	targetName := args.TargetName
-	resp := credentials.GetTargetResponse{}
+func (v *VaultProvider) GetTarget(input credentials.GetTargetInput) (credentials.GetTargetOutput, error) {
+	projName := input.ProjectName
+	targetName := input.TargetName
+	output := credentials.GetTargetOutput{}
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	// TODO we previously had this, but it's also used to make sure the
@@ -418,16 +418,16 @@ func (v *VaultProvider) GetTarget(args credentials.GetTargetArgs) (credentials.G
 	// providers, this check will be elevated in the call stack so this
 	// won't be an issue.
 	// if !svc.isAdmin() {
-	// 	return resp, errors.New("admin credentials must be used to get target information")
+	// 	return output, errors.New("admin credentials must be used to get target information")
 	// }
 
 	sec, err := svc.vaultLogicalSvc.Read(fmt.Sprintf("aws/roles/argo-cloudops-projects-%s-target-%s", projName, targetName))
 	if err != nil {
-		return resp, fmt.Errorf("vault get target error: %w", err)
+		return output, fmt.Errorf("vault get target error: %w", err)
 	}
 
 	if sec == nil {
-		return resp, ErrTargetNotFound
+		return output, ErrTargetNotFound
 	}
 
 	// These should always exist.
@@ -448,28 +448,28 @@ func (v *VaultProvider) GetTarget(args credentials.GetTargetArgs) (credentials.G
 		policyDocument = val.(string)
 	}
 
-	resp.Target.Name = targetName
-	resp.Target.Type = "aws_account"
-	resp.Target.Properties.CredentialType = credentialType
-	resp.Target.Properties.PolicyArns = policies
-	resp.Target.Properties.PolicyDocument = policyDocument
-	resp.Target.Properties.RoleArn = roleArn
+	output.Target.Name = targetName
+	output.Target.Type = "aws_account"
+	output.Target.Properties.CredentialType = credentialType
+	output.Target.Properties.PolicyArns = policies
+	output.Target.Properties.PolicyDocument = policyDocument
+	output.Target.Properties.RoleArn = roleArn
 
-	return resp, nil
+	return output, nil
 }
 
-func (v *VaultProvider) DeleteProjectToken(args credentials.DeleteProjectTokenArgs) (credentials.DeleteProjectTokenResponse, error) {
-	projectName := args.ProjectName
-	tokenID := args.TokenID
-	resp := credentials.DeleteProjectTokenResponse{}
+func (v *VaultProvider) DeleteProjectToken(input credentials.DeleteProjectTokenInput) (credentials.DeleteProjectTokenOutput, error) {
+	projectName := input.ProjectName
+	tokenID := input.TokenID
+	output := credentials.DeleteProjectTokenOutput{}
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to delete tokens")
+		return output, errors.New("admin credentials must be used to delete tokens")
 	}
 
 	data := map[string]interface{}{
@@ -479,25 +479,25 @@ func (v *VaultProvider) DeleteProjectToken(args credentials.DeleteProjectTokenAr
 	path := fmt.Sprintf("%s/secret-id-accessor/destroy", genProjectAppRole(projectName))
 	_, err = v.vaultLogicalSvc.Write(path, data)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
-	return resp, nil
+	return output, nil
 }
 
-func (v *VaultProvider) ProjectTokenExists(args credentials.ProjectTokenExistsArgs) (credentials.ProjectTokenExistsResponse, error) {
-	projectName := args.ProjectName
-	tokenID := args.TokenID
+func (v *VaultProvider) ProjectTokenExists(input credentials.ProjectTokenExistsInput) (credentials.ProjectTokenExistsOutput, error) {
+	projectName := input.ProjectName
+	tokenID := input.TokenID
 
-	resp := credentials.ProjectTokenExistsResponse{}
+	output := credentials.ProjectTokenExistsOutput{}
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to get a token")
+		return output, errors.New("admin credentials must be used to get a token")
 	}
 
 	data := map[string]interface{}{
@@ -508,29 +508,29 @@ func (v *VaultProvider) ProjectTokenExists(args credentials.ProjectTokenExistsAr
 	projectToken, err := svc.vaultLogicalSvc.Write(path, data)
 	if err != nil {
 		if !isSecretIDAccessorExists(err) {
-			resp.Exists = false
-			return resp, nil
+			output.Exists = false
+			return output, nil
 		}
-		return resp, fmt.Errorf("vault get secret ID accessor error: %w", err)
+		return output, fmt.Errorf("vault get secret ID accessor error: %w", err)
 	}
 
 	// TODO not sure why this would be nil. this was carried over from old
 	// code.
-	resp.Exists = projectToken != nil
+	output.Exists = projectToken != nil
 
-	return resp, nil
+	return output, nil
 }
 
-func (v *VaultProvider) GetToken(args credentials.GetTokenArgs) (credentials.GetTokenResponse, error) {
-	resp := credentials.GetTokenResponse{}
+func (v *VaultProvider) GetToken(input credentials.GetTokenInput) (credentials.GetTokenOutput, error) {
+	output := credentials.GetTokenOutput{}
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if svc.isAdmin() {
-		return resp, errors.New("admin credentials cannot be used to get tokens")
+		return output, errors.New("admin credentials cannot be used to get tokens")
 	}
 
 	options := map[string]interface{}{
@@ -545,12 +545,12 @@ func (v *VaultProvider) GetToken(args credentials.GetTokenArgs) (credentials.Get
 
 	sec, err := svc.vaultLogicalSvc.Write("auth/approle/login", options)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
-	resp.Token = sec.Auth.ClientToken
+	output.Token = sec.Auth.ClientToken
 
-	return resp, nil
+	return output, nil
 }
 
 // TODO See if this can be removed when refactoring auth.
@@ -558,60 +558,60 @@ func (v *VaultProvider) isAdmin() bool {
 	return v.roleID == authorizationKeyAdmin
 }
 
-func (v VaultProvider) ListTargets(args credentials.ListTargetsArgs) (credentials.ListTargetsResponse, error) {
-	projectName := args.ProjectName
-	resp := credentials.ListTargetsResponse{}
+func (v VaultProvider) ListTargets(input credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
+	projectName := input.ProjectName
+	output := credentials.ListTargetsOutput{}
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to list targets")
+		return output, errors.New("admin credentials must be used to list targets")
 	}
 
 	sec, err := svc.vaultLogicalSvc.List("aws/roles/")
 	if err != nil {
-		return resp, fmt.Errorf("vault list error: %w", err)
+		return output, fmt.Errorf("vault list error: %w", err)
 	}
 
 	// allow empty array to render json as []
-	resp.Targets = []string{}
+	output.Targets = []string{}
 	if sec != nil {
 		for _, target := range sec.Data["keys"].([]interface{}) {
 			value := target.(string)
 			prefix := fmt.Sprintf("argo-cloudops-projects-%s-target-", projectName)
 			if strings.HasPrefix(value, prefix) {
-				resp.Targets = append(resp.Targets, strings.Replace(value, prefix, "", 1))
+				output.Targets = append(output.Targets, strings.Replace(value, prefix, "", 1))
 			}
 		}
 	}
 
-	return resp, nil
+	return output, nil
 }
 
-func (v *VaultProvider) ProjectExists(args credentials.ProjectExistsArgs) (credentials.ProjectExistsResponse, error) {
-	resp := credentials.ProjectExistsResponse{}
-	name := args.ProjectName
+func (v *VaultProvider) ProjectExists(input credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
+	output := credentials.ProjectExistsOutput{}
+	name := input.ProjectName
 
-	p, err := v.GetProject(credentials.GetProjectArgs{
-		Authorization: args.Authorization,
-		Headers:       args.Headers,
+	p, err := v.GetProject(credentials.GetProjectInput{
+		Authorization: input.Authorization,
+		Headers:       input.Headers,
 		ProjectName:   name,
 	})
 
 	if errors.Is(err, ErrNotFound) {
-		return resp, nil
+		return output, nil
 	}
 
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
-	resp.Exists = p.Project.Name != ""
+	output.Exists = p.Project.Name != ""
 
-	return resp, nil
+	return output, nil
 }
 
 func (v *VaultProvider) readRoleID(appRoleName string) (string, error) {
@@ -646,57 +646,57 @@ func (v *VaultProvider) generateSecrets(appRoleName string) (*vault.Secret, erro
 	return secret, nil
 }
 
-func (v *VaultProvider) TargetExists(args credentials.TargetExistsArgs) (credentials.TargetExistsResponse, error) {
-	resp := credentials.TargetExistsResponse{}
-	projName := args.ProjectName
-	targetName := args.TargetName
+func (v *VaultProvider) TargetExists(input credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
+	output := credentials.TargetExistsOutput{}
+	projName := input.ProjectName
+	targetName := input.TargetName
 
-	t, err := v.GetTarget(credentials.GetTargetArgs{
-		Authorization: args.Authorization,
-		Headers:       args.Headers,
+	t, err := v.GetTarget(credentials.GetTargetInput{
+		Authorization: input.Authorization,
+		Headers:       input.Headers,
 		ProjectName:   projName,
 		TargetName:    targetName,
 	})
 	// TODO this wasn't handling errors properly - we're now using the same
 	// approach as ProjectExists
 	if errors.Is(err, ErrTargetNotFound) {
-		return resp, nil
+		return output, nil
 	}
 
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
-	resp.Exists = t.Target.Name != ""
+	output.Exists = t.Target.Name != ""
 
-	return resp, nil
+	return output, nil
 }
 
 // UpdateTarget updates a targets policies for the project.
-func (v *VaultProvider) UpdateTarget(args credentials.UpdateTargetArgs) (credentials.UpdateTargetResponse, error) {
-	resp := credentials.UpdateTargetResponse{}
-	projectName := args.ProjectName
-	targetName := args.Target.Name
+func (v *VaultProvider) UpdateTarget(input credentials.UpdateTargetInput) (credentials.UpdateTargetOutput, error) {
+	output := credentials.UpdateTargetOutput{}
+	projectName := input.ProjectName
+	targetName := input.Target.Name
 
-	svc, err := v.vaultSvcFn(args.Authorization, args.Headers)
+	svc, err := v.vaultSvcFn(input.Authorization, input.Headers)
 	if err != nil {
-		return resp, err
+		return output, err
 	}
 
 	if !svc.isAdmin() {
-		return resp, errors.New("admin credentials must be used to update targets")
+		return output, errors.New("admin credentials must be used to update targets")
 	}
 
 	options := map[string]interface{}{
-		"credential_type": args.Target.Properties.CredentialType,
-		"policy_arns":     args.Target.Properties.PolicyArns,
-		"policy_document": args.Target.Properties.PolicyDocument,
-		"role_arns":       args.Target.Properties.RoleArn,
+		"credential_type": input.Target.Properties.CredentialType,
+		"policy_arns":     input.Target.Properties.PolicyArns,
+		"policy_document": input.Target.Properties.PolicyDocument,
+		"role_arns":       input.Target.Properties.RoleArn,
 	}
 
 	path := fmt.Sprintf("aws/roles/%s-%s-target-%s", vaultProjectPrefix, projectName, targetName)
 	_, err = svc.vaultLogicalSvc.Write(path, options)
-	return resp, err
+	return output, err
 }
 
 func isSecretIDAccessorExists(err error) bool {

@@ -18,46 +18,46 @@ var _ credentials.Provider = &CredsProviderMock{}
 //
 //		// make and configure a mocked credentials.Provider
 //		mockedProvider := &CredsProviderMock{
-//			CreateProjectFunc: func(createProjectArgs credentials.CreateProjectArgs) (credentials.CreateProjectResponse, error) {
+//			CreateProjectFunc: func(createProjectInput credentials.CreateProjectInput) (credentials.CreateProjectOutput, error) {
 //				panic("mock out the CreateProject method")
 //			},
-//			CreateTargetFunc: func(createTargetArgs credentials.CreateTargetArgs) (credentials.CreateTargetResponse, error) {
+//			CreateTargetFunc: func(createTargetInput credentials.CreateTargetInput) (credentials.CreateTargetOutput, error) {
 //				panic("mock out the CreateTarget method")
 //			},
-//			CreateTokenFunc: func(createTokenArgs credentials.CreateTokenArgs) (credentials.CreateTokenResponse, error) {
+//			CreateTokenFunc: func(createTokenInput credentials.CreateTokenInput) (credentials.CreateTokenOutput, error) {
 //				panic("mock out the CreateToken method")
 //			},
-//			DeleteProjectFunc: func(deleteProjectArgs credentials.DeleteProjectArgs) (credentials.DeleteProjectResponse, error) {
+//			DeleteProjectFunc: func(deleteProjectInput credentials.DeleteProjectInput) (credentials.DeleteProjectOutput, error) {
 //				panic("mock out the DeleteProject method")
 //			},
-//			DeleteProjectTokenFunc: func(deleteProjectTokenArgs credentials.DeleteProjectTokenArgs) (credentials.DeleteProjectTokenResponse, error) {
+//			DeleteProjectTokenFunc: func(deleteProjectTokenInput credentials.DeleteProjectTokenInput) (credentials.DeleteProjectTokenOutput, error) {
 //				panic("mock out the DeleteProjectToken method")
 //			},
-//			DeleteTargetFunc: func(deleteTargetArgs credentials.DeleteTargetArgs) (credentials.DeleteTargetResponse, error) {
+//			DeleteTargetFunc: func(deleteTargetInput credentials.DeleteTargetInput) (credentials.DeleteTargetOutput, error) {
 //				panic("mock out the DeleteTarget method")
 //			},
-//			GetProjectFunc: func(getProjectArgs credentials.GetProjectArgs) (credentials.GetProjectResponse, error) {
+//			GetProjectFunc: func(getProjectInput credentials.GetProjectInput) (credentials.GetProjectOutput, error) {
 //				panic("mock out the GetProject method")
 //			},
-//			GetTargetFunc: func(getTargetArgs credentials.GetTargetArgs) (credentials.GetTargetResponse, error) {
+//			GetTargetFunc: func(getTargetInput credentials.GetTargetInput) (credentials.GetTargetOutput, error) {
 //				panic("mock out the GetTarget method")
 //			},
-//			GetTokenFunc: func(getTokenArgs credentials.GetTokenArgs) (credentials.GetTokenResponse, error) {
+//			GetTokenFunc: func(getTokenInput credentials.GetTokenInput) (credentials.GetTokenOutput, error) {
 //				panic("mock out the GetToken method")
 //			},
-//			ListTargetsFunc: func(listTargetsArgs credentials.ListTargetsArgs) (credentials.ListTargetsResponse, error) {
+//			ListTargetsFunc: func(listTargetsInput credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
 //				panic("mock out the ListTargets method")
 //			},
-//			ProjectExistsFunc: func(projectExistsArgs credentials.ProjectExistsArgs) (credentials.ProjectExistsResponse, error) {
+//			ProjectExistsFunc: func(projectExistsInput credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
 //				panic("mock out the ProjectExists method")
 //			},
-//			ProjectTokenExistsFunc: func(projectTokenExistsArgs credentials.ProjectTokenExistsArgs) (credentials.ProjectTokenExistsResponse, error) {
+//			ProjectTokenExistsFunc: func(projectTokenExistsInput credentials.ProjectTokenExistsInput) (credentials.ProjectTokenExistsOutput, error) {
 //				panic("mock out the ProjectTokenExists method")
 //			},
-//			TargetExistsFunc: func(targetExistsArgs credentials.TargetExistsArgs) (credentials.TargetExistsResponse, error) {
+//			TargetExistsFunc: func(targetExistsInput credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
 //				panic("mock out the TargetExists method")
 //			},
-//			UpdateTargetFunc: func(updateTargetArgs credentials.UpdateTargetArgs) (credentials.UpdateTargetResponse, error) {
+//			UpdateTargetFunc: func(updateTargetInput credentials.UpdateTargetInput) (credentials.UpdateTargetOutput, error) {
 //				panic("mock out the UpdateTarget method")
 //			},
 //		}
@@ -68,118 +68,118 @@ var _ credentials.Provider = &CredsProviderMock{}
 //	}
 type CredsProviderMock struct {
 	// CreateProjectFunc mocks the CreateProject method.
-	CreateProjectFunc func(createProjectArgs credentials.CreateProjectArgs) (credentials.CreateProjectResponse, error)
+	CreateProjectFunc func(createProjectInput credentials.CreateProjectInput) (credentials.CreateProjectOutput, error)
 
 	// CreateTargetFunc mocks the CreateTarget method.
-	CreateTargetFunc func(createTargetArgs credentials.CreateTargetArgs) (credentials.CreateTargetResponse, error)
+	CreateTargetFunc func(createTargetInput credentials.CreateTargetInput) (credentials.CreateTargetOutput, error)
 
 	// CreateTokenFunc mocks the CreateToken method.
-	CreateTokenFunc func(createTokenArgs credentials.CreateTokenArgs) (credentials.CreateTokenResponse, error)
+	CreateTokenFunc func(createTokenInput credentials.CreateTokenInput) (credentials.CreateTokenOutput, error)
 
 	// DeleteProjectFunc mocks the DeleteProject method.
-	DeleteProjectFunc func(deleteProjectArgs credentials.DeleteProjectArgs) (credentials.DeleteProjectResponse, error)
+	DeleteProjectFunc func(deleteProjectInput credentials.DeleteProjectInput) (credentials.DeleteProjectOutput, error)
 
 	// DeleteProjectTokenFunc mocks the DeleteProjectToken method.
-	DeleteProjectTokenFunc func(deleteProjectTokenArgs credentials.DeleteProjectTokenArgs) (credentials.DeleteProjectTokenResponse, error)
+	DeleteProjectTokenFunc func(deleteProjectTokenInput credentials.DeleteProjectTokenInput) (credentials.DeleteProjectTokenOutput, error)
 
 	// DeleteTargetFunc mocks the DeleteTarget method.
-	DeleteTargetFunc func(deleteTargetArgs credentials.DeleteTargetArgs) (credentials.DeleteTargetResponse, error)
+	DeleteTargetFunc func(deleteTargetInput credentials.DeleteTargetInput) (credentials.DeleteTargetOutput, error)
 
 	// GetProjectFunc mocks the GetProject method.
-	GetProjectFunc func(getProjectArgs credentials.GetProjectArgs) (credentials.GetProjectResponse, error)
+	GetProjectFunc func(getProjectInput credentials.GetProjectInput) (credentials.GetProjectOutput, error)
 
 	// GetTargetFunc mocks the GetTarget method.
-	GetTargetFunc func(getTargetArgs credentials.GetTargetArgs) (credentials.GetTargetResponse, error)
+	GetTargetFunc func(getTargetInput credentials.GetTargetInput) (credentials.GetTargetOutput, error)
 
 	// GetTokenFunc mocks the GetToken method.
-	GetTokenFunc func(getTokenArgs credentials.GetTokenArgs) (credentials.GetTokenResponse, error)
+	GetTokenFunc func(getTokenInput credentials.GetTokenInput) (credentials.GetTokenOutput, error)
 
 	// ListTargetsFunc mocks the ListTargets method.
-	ListTargetsFunc func(listTargetsArgs credentials.ListTargetsArgs) (credentials.ListTargetsResponse, error)
+	ListTargetsFunc func(listTargetsInput credentials.ListTargetsInput) (credentials.ListTargetsOutput, error)
 
 	// ProjectExistsFunc mocks the ProjectExists method.
-	ProjectExistsFunc func(projectExistsArgs credentials.ProjectExistsArgs) (credentials.ProjectExistsResponse, error)
+	ProjectExistsFunc func(projectExistsInput credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error)
 
 	// ProjectTokenExistsFunc mocks the ProjectTokenExists method.
-	ProjectTokenExistsFunc func(projectTokenExistsArgs credentials.ProjectTokenExistsArgs) (credentials.ProjectTokenExistsResponse, error)
+	ProjectTokenExistsFunc func(projectTokenExistsInput credentials.ProjectTokenExistsInput) (credentials.ProjectTokenExistsOutput, error)
 
 	// TargetExistsFunc mocks the TargetExists method.
-	TargetExistsFunc func(targetExistsArgs credentials.TargetExistsArgs) (credentials.TargetExistsResponse, error)
+	TargetExistsFunc func(targetExistsInput credentials.TargetExistsInput) (credentials.TargetExistsOutput, error)
 
 	// UpdateTargetFunc mocks the UpdateTarget method.
-	UpdateTargetFunc func(updateTargetArgs credentials.UpdateTargetArgs) (credentials.UpdateTargetResponse, error)
+	UpdateTargetFunc func(updateTargetInput credentials.UpdateTargetInput) (credentials.UpdateTargetOutput, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// CreateProject holds details about calls to the CreateProject method.
 		CreateProject []struct {
-			// CreateProjectArgs is the createProjectArgs argument value.
-			CreateProjectArgs credentials.CreateProjectArgs
+			// CreateProjectInput is the createProjectInput argument value.
+			CreateProjectInput credentials.CreateProjectInput
 		}
 		// CreateTarget holds details about calls to the CreateTarget method.
 		CreateTarget []struct {
-			// CreateTargetArgs is the createTargetArgs argument value.
-			CreateTargetArgs credentials.CreateTargetArgs
+			// CreateTargetInput is the createTargetInput argument value.
+			CreateTargetInput credentials.CreateTargetInput
 		}
 		// CreateToken holds details about calls to the CreateToken method.
 		CreateToken []struct {
-			// CreateTokenArgs is the createTokenArgs argument value.
-			CreateTokenArgs credentials.CreateTokenArgs
+			// CreateTokenInput is the createTokenInput argument value.
+			CreateTokenInput credentials.CreateTokenInput
 		}
 		// DeleteProject holds details about calls to the DeleteProject method.
 		DeleteProject []struct {
-			// DeleteProjectArgs is the deleteProjectArgs argument value.
-			DeleteProjectArgs credentials.DeleteProjectArgs
+			// DeleteProjectInput is the deleteProjectInput argument value.
+			DeleteProjectInput credentials.DeleteProjectInput
 		}
 		// DeleteProjectToken holds details about calls to the DeleteProjectToken method.
 		DeleteProjectToken []struct {
-			// DeleteProjectTokenArgs is the deleteProjectTokenArgs argument value.
-			DeleteProjectTokenArgs credentials.DeleteProjectTokenArgs
+			// DeleteProjectTokenInput is the deleteProjectTokenInput argument value.
+			DeleteProjectTokenInput credentials.DeleteProjectTokenInput
 		}
 		// DeleteTarget holds details about calls to the DeleteTarget method.
 		DeleteTarget []struct {
-			// DeleteTargetArgs is the deleteTargetArgs argument value.
-			DeleteTargetArgs credentials.DeleteTargetArgs
+			// DeleteTargetInput is the deleteTargetInput argument value.
+			DeleteTargetInput credentials.DeleteTargetInput
 		}
 		// GetProject holds details about calls to the GetProject method.
 		GetProject []struct {
-			// GetProjectArgs is the getProjectArgs argument value.
-			GetProjectArgs credentials.GetProjectArgs
+			// GetProjectInput is the getProjectInput argument value.
+			GetProjectInput credentials.GetProjectInput
 		}
 		// GetTarget holds details about calls to the GetTarget method.
 		GetTarget []struct {
-			// GetTargetArgs is the getTargetArgs argument value.
-			GetTargetArgs credentials.GetTargetArgs
+			// GetTargetInput is the getTargetInput argument value.
+			GetTargetInput credentials.GetTargetInput
 		}
 		// GetToken holds details about calls to the GetToken method.
 		GetToken []struct {
-			// GetTokenArgs is the getTokenArgs argument value.
-			GetTokenArgs credentials.GetTokenArgs
+			// GetTokenInput is the getTokenInput argument value.
+			GetTokenInput credentials.GetTokenInput
 		}
 		// ListTargets holds details about calls to the ListTargets method.
 		ListTargets []struct {
-			// ListTargetsArgs is the listTargetsArgs argument value.
-			ListTargetsArgs credentials.ListTargetsArgs
+			// ListTargetsInput is the listTargetsInput argument value.
+			ListTargetsInput credentials.ListTargetsInput
 		}
 		// ProjectExists holds details about calls to the ProjectExists method.
 		ProjectExists []struct {
-			// ProjectExistsArgs is the projectExistsArgs argument value.
-			ProjectExistsArgs credentials.ProjectExistsArgs
+			// ProjectExistsInput is the projectExistsInput argument value.
+			ProjectExistsInput credentials.ProjectExistsInput
 		}
 		// ProjectTokenExists holds details about calls to the ProjectTokenExists method.
 		ProjectTokenExists []struct {
-			// ProjectTokenExistsArgs is the projectTokenExistsArgs argument value.
-			ProjectTokenExistsArgs credentials.ProjectTokenExistsArgs
+			// ProjectTokenExistsInput is the projectTokenExistsInput argument value.
+			ProjectTokenExistsInput credentials.ProjectTokenExistsInput
 		}
 		// TargetExists holds details about calls to the TargetExists method.
 		TargetExists []struct {
-			// TargetExistsArgs is the targetExistsArgs argument value.
-			TargetExistsArgs credentials.TargetExistsArgs
+			// TargetExistsInput is the targetExistsInput argument value.
+			TargetExistsInput credentials.TargetExistsInput
 		}
 		// UpdateTarget holds details about calls to the UpdateTarget method.
 		UpdateTarget []struct {
-			// UpdateTargetArgs is the updateTargetArgs argument value.
-			UpdateTargetArgs credentials.UpdateTargetArgs
+			// UpdateTargetInput is the updateTargetInput argument value.
+			UpdateTargetInput credentials.UpdateTargetInput
 		}
 	}
 	lockCreateProject      sync.RWMutex
@@ -199,19 +199,19 @@ type CredsProviderMock struct {
 }
 
 // CreateProject calls CreateProjectFunc.
-func (mock *CredsProviderMock) CreateProject(createProjectArgs credentials.CreateProjectArgs) (credentials.CreateProjectResponse, error) {
+func (mock *CredsProviderMock) CreateProject(createProjectInput credentials.CreateProjectInput) (credentials.CreateProjectOutput, error) {
 	if mock.CreateProjectFunc == nil {
 		panic("CredsProviderMock.CreateProjectFunc: method is nil but Provider.CreateProject was just called")
 	}
 	callInfo := struct {
-		CreateProjectArgs credentials.CreateProjectArgs
+		CreateProjectInput credentials.CreateProjectInput
 	}{
-		CreateProjectArgs: createProjectArgs,
+		CreateProjectInput: createProjectInput,
 	}
 	mock.lockCreateProject.Lock()
 	mock.calls.CreateProject = append(mock.calls.CreateProject, callInfo)
 	mock.lockCreateProject.Unlock()
-	return mock.CreateProjectFunc(createProjectArgs)
+	return mock.CreateProjectFunc(createProjectInput)
 }
 
 // CreateProjectCalls gets all the calls that were made to CreateProject.
@@ -219,10 +219,10 @@ func (mock *CredsProviderMock) CreateProject(createProjectArgs credentials.Creat
 //
 //	len(mockedProvider.CreateProjectCalls())
 func (mock *CredsProviderMock) CreateProjectCalls() []struct {
-	CreateProjectArgs credentials.CreateProjectArgs
+	CreateProjectInput credentials.CreateProjectInput
 } {
 	var calls []struct {
-		CreateProjectArgs credentials.CreateProjectArgs
+		CreateProjectInput credentials.CreateProjectInput
 	}
 	mock.lockCreateProject.RLock()
 	calls = mock.calls.CreateProject
@@ -231,19 +231,19 @@ func (mock *CredsProviderMock) CreateProjectCalls() []struct {
 }
 
 // CreateTarget calls CreateTargetFunc.
-func (mock *CredsProviderMock) CreateTarget(createTargetArgs credentials.CreateTargetArgs) (credentials.CreateTargetResponse, error) {
+func (mock *CredsProviderMock) CreateTarget(createTargetInput credentials.CreateTargetInput) (credentials.CreateTargetOutput, error) {
 	if mock.CreateTargetFunc == nil {
 		panic("CredsProviderMock.CreateTargetFunc: method is nil but Provider.CreateTarget was just called")
 	}
 	callInfo := struct {
-		CreateTargetArgs credentials.CreateTargetArgs
+		CreateTargetInput credentials.CreateTargetInput
 	}{
-		CreateTargetArgs: createTargetArgs,
+		CreateTargetInput: createTargetInput,
 	}
 	mock.lockCreateTarget.Lock()
 	mock.calls.CreateTarget = append(mock.calls.CreateTarget, callInfo)
 	mock.lockCreateTarget.Unlock()
-	return mock.CreateTargetFunc(createTargetArgs)
+	return mock.CreateTargetFunc(createTargetInput)
 }
 
 // CreateTargetCalls gets all the calls that were made to CreateTarget.
@@ -251,10 +251,10 @@ func (mock *CredsProviderMock) CreateTarget(createTargetArgs credentials.CreateT
 //
 //	len(mockedProvider.CreateTargetCalls())
 func (mock *CredsProviderMock) CreateTargetCalls() []struct {
-	CreateTargetArgs credentials.CreateTargetArgs
+	CreateTargetInput credentials.CreateTargetInput
 } {
 	var calls []struct {
-		CreateTargetArgs credentials.CreateTargetArgs
+		CreateTargetInput credentials.CreateTargetInput
 	}
 	mock.lockCreateTarget.RLock()
 	calls = mock.calls.CreateTarget
@@ -263,19 +263,19 @@ func (mock *CredsProviderMock) CreateTargetCalls() []struct {
 }
 
 // CreateToken calls CreateTokenFunc.
-func (mock *CredsProviderMock) CreateToken(createTokenArgs credentials.CreateTokenArgs) (credentials.CreateTokenResponse, error) {
+func (mock *CredsProviderMock) CreateToken(createTokenInput credentials.CreateTokenInput) (credentials.CreateTokenOutput, error) {
 	if mock.CreateTokenFunc == nil {
 		panic("CredsProviderMock.CreateTokenFunc: method is nil but Provider.CreateToken was just called")
 	}
 	callInfo := struct {
-		CreateTokenArgs credentials.CreateTokenArgs
+		CreateTokenInput credentials.CreateTokenInput
 	}{
-		CreateTokenArgs: createTokenArgs,
+		CreateTokenInput: createTokenInput,
 	}
 	mock.lockCreateToken.Lock()
 	mock.calls.CreateToken = append(mock.calls.CreateToken, callInfo)
 	mock.lockCreateToken.Unlock()
-	return mock.CreateTokenFunc(createTokenArgs)
+	return mock.CreateTokenFunc(createTokenInput)
 }
 
 // CreateTokenCalls gets all the calls that were made to CreateToken.
@@ -283,10 +283,10 @@ func (mock *CredsProviderMock) CreateToken(createTokenArgs credentials.CreateTok
 //
 //	len(mockedProvider.CreateTokenCalls())
 func (mock *CredsProviderMock) CreateTokenCalls() []struct {
-	CreateTokenArgs credentials.CreateTokenArgs
+	CreateTokenInput credentials.CreateTokenInput
 } {
 	var calls []struct {
-		CreateTokenArgs credentials.CreateTokenArgs
+		CreateTokenInput credentials.CreateTokenInput
 	}
 	mock.lockCreateToken.RLock()
 	calls = mock.calls.CreateToken
@@ -295,19 +295,19 @@ func (mock *CredsProviderMock) CreateTokenCalls() []struct {
 }
 
 // DeleteProject calls DeleteProjectFunc.
-func (mock *CredsProviderMock) DeleteProject(deleteProjectArgs credentials.DeleteProjectArgs) (credentials.DeleteProjectResponse, error) {
+func (mock *CredsProviderMock) DeleteProject(deleteProjectInput credentials.DeleteProjectInput) (credentials.DeleteProjectOutput, error) {
 	if mock.DeleteProjectFunc == nil {
 		panic("CredsProviderMock.DeleteProjectFunc: method is nil but Provider.DeleteProject was just called")
 	}
 	callInfo := struct {
-		DeleteProjectArgs credentials.DeleteProjectArgs
+		DeleteProjectInput credentials.DeleteProjectInput
 	}{
-		DeleteProjectArgs: deleteProjectArgs,
+		DeleteProjectInput: deleteProjectInput,
 	}
 	mock.lockDeleteProject.Lock()
 	mock.calls.DeleteProject = append(mock.calls.DeleteProject, callInfo)
 	mock.lockDeleteProject.Unlock()
-	return mock.DeleteProjectFunc(deleteProjectArgs)
+	return mock.DeleteProjectFunc(deleteProjectInput)
 }
 
 // DeleteProjectCalls gets all the calls that were made to DeleteProject.
@@ -315,10 +315,10 @@ func (mock *CredsProviderMock) DeleteProject(deleteProjectArgs credentials.Delet
 //
 //	len(mockedProvider.DeleteProjectCalls())
 func (mock *CredsProviderMock) DeleteProjectCalls() []struct {
-	DeleteProjectArgs credentials.DeleteProjectArgs
+	DeleteProjectInput credentials.DeleteProjectInput
 } {
 	var calls []struct {
-		DeleteProjectArgs credentials.DeleteProjectArgs
+		DeleteProjectInput credentials.DeleteProjectInput
 	}
 	mock.lockDeleteProject.RLock()
 	calls = mock.calls.DeleteProject
@@ -327,19 +327,19 @@ func (mock *CredsProviderMock) DeleteProjectCalls() []struct {
 }
 
 // DeleteProjectToken calls DeleteProjectTokenFunc.
-func (mock *CredsProviderMock) DeleteProjectToken(deleteProjectTokenArgs credentials.DeleteProjectTokenArgs) (credentials.DeleteProjectTokenResponse, error) {
+func (mock *CredsProviderMock) DeleteProjectToken(deleteProjectTokenInput credentials.DeleteProjectTokenInput) (credentials.DeleteProjectTokenOutput, error) {
 	if mock.DeleteProjectTokenFunc == nil {
 		panic("CredsProviderMock.DeleteProjectTokenFunc: method is nil but Provider.DeleteProjectToken was just called")
 	}
 	callInfo := struct {
-		DeleteProjectTokenArgs credentials.DeleteProjectTokenArgs
+		DeleteProjectTokenInput credentials.DeleteProjectTokenInput
 	}{
-		DeleteProjectTokenArgs: deleteProjectTokenArgs,
+		DeleteProjectTokenInput: deleteProjectTokenInput,
 	}
 	mock.lockDeleteProjectToken.Lock()
 	mock.calls.DeleteProjectToken = append(mock.calls.DeleteProjectToken, callInfo)
 	mock.lockDeleteProjectToken.Unlock()
-	return mock.DeleteProjectTokenFunc(deleteProjectTokenArgs)
+	return mock.DeleteProjectTokenFunc(deleteProjectTokenInput)
 }
 
 // DeleteProjectTokenCalls gets all the calls that were made to DeleteProjectToken.
@@ -347,10 +347,10 @@ func (mock *CredsProviderMock) DeleteProjectToken(deleteProjectTokenArgs credent
 //
 //	len(mockedProvider.DeleteProjectTokenCalls())
 func (mock *CredsProviderMock) DeleteProjectTokenCalls() []struct {
-	DeleteProjectTokenArgs credentials.DeleteProjectTokenArgs
+	DeleteProjectTokenInput credentials.DeleteProjectTokenInput
 } {
 	var calls []struct {
-		DeleteProjectTokenArgs credentials.DeleteProjectTokenArgs
+		DeleteProjectTokenInput credentials.DeleteProjectTokenInput
 	}
 	mock.lockDeleteProjectToken.RLock()
 	calls = mock.calls.DeleteProjectToken
@@ -359,19 +359,19 @@ func (mock *CredsProviderMock) DeleteProjectTokenCalls() []struct {
 }
 
 // DeleteTarget calls DeleteTargetFunc.
-func (mock *CredsProviderMock) DeleteTarget(deleteTargetArgs credentials.DeleteTargetArgs) (credentials.DeleteTargetResponse, error) {
+func (mock *CredsProviderMock) DeleteTarget(deleteTargetInput credentials.DeleteTargetInput) (credentials.DeleteTargetOutput, error) {
 	if mock.DeleteTargetFunc == nil {
 		panic("CredsProviderMock.DeleteTargetFunc: method is nil but Provider.DeleteTarget was just called")
 	}
 	callInfo := struct {
-		DeleteTargetArgs credentials.DeleteTargetArgs
+		DeleteTargetInput credentials.DeleteTargetInput
 	}{
-		DeleteTargetArgs: deleteTargetArgs,
+		DeleteTargetInput: deleteTargetInput,
 	}
 	mock.lockDeleteTarget.Lock()
 	mock.calls.DeleteTarget = append(mock.calls.DeleteTarget, callInfo)
 	mock.lockDeleteTarget.Unlock()
-	return mock.DeleteTargetFunc(deleteTargetArgs)
+	return mock.DeleteTargetFunc(deleteTargetInput)
 }
 
 // DeleteTargetCalls gets all the calls that were made to DeleteTarget.
@@ -379,10 +379,10 @@ func (mock *CredsProviderMock) DeleteTarget(deleteTargetArgs credentials.DeleteT
 //
 //	len(mockedProvider.DeleteTargetCalls())
 func (mock *CredsProviderMock) DeleteTargetCalls() []struct {
-	DeleteTargetArgs credentials.DeleteTargetArgs
+	DeleteTargetInput credentials.DeleteTargetInput
 } {
 	var calls []struct {
-		DeleteTargetArgs credentials.DeleteTargetArgs
+		DeleteTargetInput credentials.DeleteTargetInput
 	}
 	mock.lockDeleteTarget.RLock()
 	calls = mock.calls.DeleteTarget
@@ -391,19 +391,19 @@ func (mock *CredsProviderMock) DeleteTargetCalls() []struct {
 }
 
 // GetProject calls GetProjectFunc.
-func (mock *CredsProviderMock) GetProject(getProjectArgs credentials.GetProjectArgs) (credentials.GetProjectResponse, error) {
+func (mock *CredsProviderMock) GetProject(getProjectInput credentials.GetProjectInput) (credentials.GetProjectOutput, error) {
 	if mock.GetProjectFunc == nil {
 		panic("CredsProviderMock.GetProjectFunc: method is nil but Provider.GetProject was just called")
 	}
 	callInfo := struct {
-		GetProjectArgs credentials.GetProjectArgs
+		GetProjectInput credentials.GetProjectInput
 	}{
-		GetProjectArgs: getProjectArgs,
+		GetProjectInput: getProjectInput,
 	}
 	mock.lockGetProject.Lock()
 	mock.calls.GetProject = append(mock.calls.GetProject, callInfo)
 	mock.lockGetProject.Unlock()
-	return mock.GetProjectFunc(getProjectArgs)
+	return mock.GetProjectFunc(getProjectInput)
 }
 
 // GetProjectCalls gets all the calls that were made to GetProject.
@@ -411,10 +411,10 @@ func (mock *CredsProviderMock) GetProject(getProjectArgs credentials.GetProjectA
 //
 //	len(mockedProvider.GetProjectCalls())
 func (mock *CredsProviderMock) GetProjectCalls() []struct {
-	GetProjectArgs credentials.GetProjectArgs
+	GetProjectInput credentials.GetProjectInput
 } {
 	var calls []struct {
-		GetProjectArgs credentials.GetProjectArgs
+		GetProjectInput credentials.GetProjectInput
 	}
 	mock.lockGetProject.RLock()
 	calls = mock.calls.GetProject
@@ -423,19 +423,19 @@ func (mock *CredsProviderMock) GetProjectCalls() []struct {
 }
 
 // GetTarget calls GetTargetFunc.
-func (mock *CredsProviderMock) GetTarget(getTargetArgs credentials.GetTargetArgs) (credentials.GetTargetResponse, error) {
+func (mock *CredsProviderMock) GetTarget(getTargetInput credentials.GetTargetInput) (credentials.GetTargetOutput, error) {
 	if mock.GetTargetFunc == nil {
 		panic("CredsProviderMock.GetTargetFunc: method is nil but Provider.GetTarget was just called")
 	}
 	callInfo := struct {
-		GetTargetArgs credentials.GetTargetArgs
+		GetTargetInput credentials.GetTargetInput
 	}{
-		GetTargetArgs: getTargetArgs,
+		GetTargetInput: getTargetInput,
 	}
 	mock.lockGetTarget.Lock()
 	mock.calls.GetTarget = append(mock.calls.GetTarget, callInfo)
 	mock.lockGetTarget.Unlock()
-	return mock.GetTargetFunc(getTargetArgs)
+	return mock.GetTargetFunc(getTargetInput)
 }
 
 // GetTargetCalls gets all the calls that were made to GetTarget.
@@ -443,10 +443,10 @@ func (mock *CredsProviderMock) GetTarget(getTargetArgs credentials.GetTargetArgs
 //
 //	len(mockedProvider.GetTargetCalls())
 func (mock *CredsProviderMock) GetTargetCalls() []struct {
-	GetTargetArgs credentials.GetTargetArgs
+	GetTargetInput credentials.GetTargetInput
 } {
 	var calls []struct {
-		GetTargetArgs credentials.GetTargetArgs
+		GetTargetInput credentials.GetTargetInput
 	}
 	mock.lockGetTarget.RLock()
 	calls = mock.calls.GetTarget
@@ -455,19 +455,19 @@ func (mock *CredsProviderMock) GetTargetCalls() []struct {
 }
 
 // GetToken calls GetTokenFunc.
-func (mock *CredsProviderMock) GetToken(getTokenArgs credentials.GetTokenArgs) (credentials.GetTokenResponse, error) {
+func (mock *CredsProviderMock) GetToken(getTokenInput credentials.GetTokenInput) (credentials.GetTokenOutput, error) {
 	if mock.GetTokenFunc == nil {
 		panic("CredsProviderMock.GetTokenFunc: method is nil but Provider.GetToken was just called")
 	}
 	callInfo := struct {
-		GetTokenArgs credentials.GetTokenArgs
+		GetTokenInput credentials.GetTokenInput
 	}{
-		GetTokenArgs: getTokenArgs,
+		GetTokenInput: getTokenInput,
 	}
 	mock.lockGetToken.Lock()
 	mock.calls.GetToken = append(mock.calls.GetToken, callInfo)
 	mock.lockGetToken.Unlock()
-	return mock.GetTokenFunc(getTokenArgs)
+	return mock.GetTokenFunc(getTokenInput)
 }
 
 // GetTokenCalls gets all the calls that were made to GetToken.
@@ -475,10 +475,10 @@ func (mock *CredsProviderMock) GetToken(getTokenArgs credentials.GetTokenArgs) (
 //
 //	len(mockedProvider.GetTokenCalls())
 func (mock *CredsProviderMock) GetTokenCalls() []struct {
-	GetTokenArgs credentials.GetTokenArgs
+	GetTokenInput credentials.GetTokenInput
 } {
 	var calls []struct {
-		GetTokenArgs credentials.GetTokenArgs
+		GetTokenInput credentials.GetTokenInput
 	}
 	mock.lockGetToken.RLock()
 	calls = mock.calls.GetToken
@@ -487,19 +487,19 @@ func (mock *CredsProviderMock) GetTokenCalls() []struct {
 }
 
 // ListTargets calls ListTargetsFunc.
-func (mock *CredsProviderMock) ListTargets(listTargetsArgs credentials.ListTargetsArgs) (credentials.ListTargetsResponse, error) {
+func (mock *CredsProviderMock) ListTargets(listTargetsInput credentials.ListTargetsInput) (credentials.ListTargetsOutput, error) {
 	if mock.ListTargetsFunc == nil {
 		panic("CredsProviderMock.ListTargetsFunc: method is nil but Provider.ListTargets was just called")
 	}
 	callInfo := struct {
-		ListTargetsArgs credentials.ListTargetsArgs
+		ListTargetsInput credentials.ListTargetsInput
 	}{
-		ListTargetsArgs: listTargetsArgs,
+		ListTargetsInput: listTargetsInput,
 	}
 	mock.lockListTargets.Lock()
 	mock.calls.ListTargets = append(mock.calls.ListTargets, callInfo)
 	mock.lockListTargets.Unlock()
-	return mock.ListTargetsFunc(listTargetsArgs)
+	return mock.ListTargetsFunc(listTargetsInput)
 }
 
 // ListTargetsCalls gets all the calls that were made to ListTargets.
@@ -507,10 +507,10 @@ func (mock *CredsProviderMock) ListTargets(listTargetsArgs credentials.ListTarge
 //
 //	len(mockedProvider.ListTargetsCalls())
 func (mock *CredsProviderMock) ListTargetsCalls() []struct {
-	ListTargetsArgs credentials.ListTargetsArgs
+	ListTargetsInput credentials.ListTargetsInput
 } {
 	var calls []struct {
-		ListTargetsArgs credentials.ListTargetsArgs
+		ListTargetsInput credentials.ListTargetsInput
 	}
 	mock.lockListTargets.RLock()
 	calls = mock.calls.ListTargets
@@ -519,19 +519,19 @@ func (mock *CredsProviderMock) ListTargetsCalls() []struct {
 }
 
 // ProjectExists calls ProjectExistsFunc.
-func (mock *CredsProviderMock) ProjectExists(projectExistsArgs credentials.ProjectExistsArgs) (credentials.ProjectExistsResponse, error) {
+func (mock *CredsProviderMock) ProjectExists(projectExistsInput credentials.ProjectExistsInput) (credentials.ProjectExistsOutput, error) {
 	if mock.ProjectExistsFunc == nil {
 		panic("CredsProviderMock.ProjectExistsFunc: method is nil but Provider.ProjectExists was just called")
 	}
 	callInfo := struct {
-		ProjectExistsArgs credentials.ProjectExistsArgs
+		ProjectExistsInput credentials.ProjectExistsInput
 	}{
-		ProjectExistsArgs: projectExistsArgs,
+		ProjectExistsInput: projectExistsInput,
 	}
 	mock.lockProjectExists.Lock()
 	mock.calls.ProjectExists = append(mock.calls.ProjectExists, callInfo)
 	mock.lockProjectExists.Unlock()
-	return mock.ProjectExistsFunc(projectExistsArgs)
+	return mock.ProjectExistsFunc(projectExistsInput)
 }
 
 // ProjectExistsCalls gets all the calls that were made to ProjectExists.
@@ -539,10 +539,10 @@ func (mock *CredsProviderMock) ProjectExists(projectExistsArgs credentials.Proje
 //
 //	len(mockedProvider.ProjectExistsCalls())
 func (mock *CredsProviderMock) ProjectExistsCalls() []struct {
-	ProjectExistsArgs credentials.ProjectExistsArgs
+	ProjectExistsInput credentials.ProjectExistsInput
 } {
 	var calls []struct {
-		ProjectExistsArgs credentials.ProjectExistsArgs
+		ProjectExistsInput credentials.ProjectExistsInput
 	}
 	mock.lockProjectExists.RLock()
 	calls = mock.calls.ProjectExists
@@ -551,19 +551,19 @@ func (mock *CredsProviderMock) ProjectExistsCalls() []struct {
 }
 
 // ProjectTokenExists calls ProjectTokenExistsFunc.
-func (mock *CredsProviderMock) ProjectTokenExists(projectTokenExistsArgs credentials.ProjectTokenExistsArgs) (credentials.ProjectTokenExistsResponse, error) {
+func (mock *CredsProviderMock) ProjectTokenExists(projectTokenExistsInput credentials.ProjectTokenExistsInput) (credentials.ProjectTokenExistsOutput, error) {
 	if mock.ProjectTokenExistsFunc == nil {
 		panic("CredsProviderMock.ProjectTokenExistsFunc: method is nil but Provider.ProjectTokenExists was just called")
 	}
 	callInfo := struct {
-		ProjectTokenExistsArgs credentials.ProjectTokenExistsArgs
+		ProjectTokenExistsInput credentials.ProjectTokenExistsInput
 	}{
-		ProjectTokenExistsArgs: projectTokenExistsArgs,
+		ProjectTokenExistsInput: projectTokenExistsInput,
 	}
 	mock.lockProjectTokenExists.Lock()
 	mock.calls.ProjectTokenExists = append(mock.calls.ProjectTokenExists, callInfo)
 	mock.lockProjectTokenExists.Unlock()
-	return mock.ProjectTokenExistsFunc(projectTokenExistsArgs)
+	return mock.ProjectTokenExistsFunc(projectTokenExistsInput)
 }
 
 // ProjectTokenExistsCalls gets all the calls that were made to ProjectTokenExists.
@@ -571,10 +571,10 @@ func (mock *CredsProviderMock) ProjectTokenExists(projectTokenExistsArgs credent
 //
 //	len(mockedProvider.ProjectTokenExistsCalls())
 func (mock *CredsProviderMock) ProjectTokenExistsCalls() []struct {
-	ProjectTokenExistsArgs credentials.ProjectTokenExistsArgs
+	ProjectTokenExistsInput credentials.ProjectTokenExistsInput
 } {
 	var calls []struct {
-		ProjectTokenExistsArgs credentials.ProjectTokenExistsArgs
+		ProjectTokenExistsInput credentials.ProjectTokenExistsInput
 	}
 	mock.lockProjectTokenExists.RLock()
 	calls = mock.calls.ProjectTokenExists
@@ -583,19 +583,19 @@ func (mock *CredsProviderMock) ProjectTokenExistsCalls() []struct {
 }
 
 // TargetExists calls TargetExistsFunc.
-func (mock *CredsProviderMock) TargetExists(targetExistsArgs credentials.TargetExistsArgs) (credentials.TargetExistsResponse, error) {
+func (mock *CredsProviderMock) TargetExists(targetExistsInput credentials.TargetExistsInput) (credentials.TargetExistsOutput, error) {
 	if mock.TargetExistsFunc == nil {
 		panic("CredsProviderMock.TargetExistsFunc: method is nil but Provider.TargetExists was just called")
 	}
 	callInfo := struct {
-		TargetExistsArgs credentials.TargetExistsArgs
+		TargetExistsInput credentials.TargetExistsInput
 	}{
-		TargetExistsArgs: targetExistsArgs,
+		TargetExistsInput: targetExistsInput,
 	}
 	mock.lockTargetExists.Lock()
 	mock.calls.TargetExists = append(mock.calls.TargetExists, callInfo)
 	mock.lockTargetExists.Unlock()
-	return mock.TargetExistsFunc(targetExistsArgs)
+	return mock.TargetExistsFunc(targetExistsInput)
 }
 
 // TargetExistsCalls gets all the calls that were made to TargetExists.
@@ -603,10 +603,10 @@ func (mock *CredsProviderMock) TargetExists(targetExistsArgs credentials.TargetE
 //
 //	len(mockedProvider.TargetExistsCalls())
 func (mock *CredsProviderMock) TargetExistsCalls() []struct {
-	TargetExistsArgs credentials.TargetExistsArgs
+	TargetExistsInput credentials.TargetExistsInput
 } {
 	var calls []struct {
-		TargetExistsArgs credentials.TargetExistsArgs
+		TargetExistsInput credentials.TargetExistsInput
 	}
 	mock.lockTargetExists.RLock()
 	calls = mock.calls.TargetExists
@@ -615,19 +615,19 @@ func (mock *CredsProviderMock) TargetExistsCalls() []struct {
 }
 
 // UpdateTarget calls UpdateTargetFunc.
-func (mock *CredsProviderMock) UpdateTarget(updateTargetArgs credentials.UpdateTargetArgs) (credentials.UpdateTargetResponse, error) {
+func (mock *CredsProviderMock) UpdateTarget(updateTargetInput credentials.UpdateTargetInput) (credentials.UpdateTargetOutput, error) {
 	if mock.UpdateTargetFunc == nil {
 		panic("CredsProviderMock.UpdateTargetFunc: method is nil but Provider.UpdateTarget was just called")
 	}
 	callInfo := struct {
-		UpdateTargetArgs credentials.UpdateTargetArgs
+		UpdateTargetInput credentials.UpdateTargetInput
 	}{
-		UpdateTargetArgs: updateTargetArgs,
+		UpdateTargetInput: updateTargetInput,
 	}
 	mock.lockUpdateTarget.Lock()
 	mock.calls.UpdateTarget = append(mock.calls.UpdateTarget, callInfo)
 	mock.lockUpdateTarget.Unlock()
-	return mock.UpdateTargetFunc(updateTargetArgs)
+	return mock.UpdateTargetFunc(updateTargetInput)
 }
 
 // UpdateTargetCalls gets all the calls that were made to UpdateTarget.
@@ -635,10 +635,10 @@ func (mock *CredsProviderMock) UpdateTarget(updateTargetArgs credentials.UpdateT
 //
 //	len(mockedProvider.UpdateTargetCalls())
 func (mock *CredsProviderMock) UpdateTargetCalls() []struct {
-	UpdateTargetArgs credentials.UpdateTargetArgs
+	UpdateTargetInput credentials.UpdateTargetInput
 } {
 	var calls []struct {
-		UpdateTargetArgs credentials.UpdateTargetArgs
+		UpdateTargetInput credentials.UpdateTargetInput
 	}
 	mock.lockUpdateTarget.RLock()
 	calls = mock.calls.UpdateTarget

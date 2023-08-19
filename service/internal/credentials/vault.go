@@ -20,6 +20,7 @@ const (
 	authorizationKeyAdmin = "admin"
 )
 
+// TODO needed?
 var (
 	// ErrNotFound conveys that the item was not found.
 	ErrNotFound = errors.New("item not found")
@@ -84,28 +85,28 @@ func NewAuthorization(authorizationHeader string) (*Authorization, error) {
 }
 
 type Provider interface {
-	CreateProject(CreateProjectArgs) (CreateProjectResponse, error)
-	CreateTarget(CreateTargetArgs) (CreateTargetResponse, error)
-	CreateToken(CreateTokenArgs) (CreateTokenResponse, error)
-	DeleteProject(DeleteProjectArgs) (DeleteProjectResponse, error)
-	DeleteProjectToken(DeleteProjectTokenArgs) (DeleteProjectTokenResponse, error)
-	DeleteTarget(DeleteTargetArgs) (DeleteTargetResponse, error)
-	GetProject(GetProjectArgs) (GetProjectResponse, error)
+	CreateProject(CreateProjectInput) (CreateProjectOutput, error)
+	CreateTarget(CreateTargetInput) (CreateTargetOutput, error)
+	CreateToken(CreateTokenInput) (CreateTokenOutput, error)
+	DeleteProject(DeleteProjectInput) (DeleteProjectOutput, error)
+	DeleteProjectToken(DeleteProjectTokenInput) (DeleteProjectTokenOutput, error)
+	DeleteTarget(DeleteTargetInput) (DeleteTargetOutput, error)
+	GetProject(GetProjectInput) (GetProjectOutput, error)
 
 	// This is used to check if a token exists in
 	// the backend. The current implementation uses GetProjectToken to achieve
 	// this, but doesn't do anything with the data. GetProjectToken could be an
 	// internal implementation detail (instead of being part of the interface/a
 	// public method).
-	ProjectTokenExists(ProjectTokenExistsArgs) (ProjectTokenExistsResponse, error)
-	GetTarget(GetTargetArgs) (GetTargetResponse, error)
+	ProjectTokenExists(ProjectTokenExistsInput) (ProjectTokenExistsOutput, error)
+	GetTarget(GetTargetInput) (GetTargetOutput, error)
 
 	// This is to get a token which can be exchanged for target credentials.
-	GetToken(GetTokenArgs) (GetTokenResponse, error)
-	ListTargets(ListTargetsArgs) (ListTargetsResponse, error)
-	ProjectExists(ProjectExistsArgs) (ProjectExistsResponse, error)
-	TargetExists(TargetExistsArgs) (TargetExistsResponse, error)
-	UpdateTarget(UpdateTargetArgs) (UpdateTargetResponse, error)
+	GetToken(GetTokenInput) (GetTokenOutput, error)
+	ListTargets(ListTargetsInput) (ListTargetsOutput, error)
+	ProjectExists(ProjectExistsInput) (ProjectExistsOutput, error)
+	TargetExists(TargetExistsInput) (TargetExistsOutput, error)
+	UpdateTarget(UpdateTargetInput) (UpdateTargetOutput, error)
 	// TODO make sure all V2 interface methods are implemented
 }
 
@@ -114,108 +115,98 @@ type ProviderV2RPCClient struct {
 	client *rpc.Client
 }
 
-// CreateProject(string) (types.Token, error)
-type CreateProjectArgs struct {
+type CreateProjectInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 }
 
-type CreateProjectResponse struct {
+type CreateProjectOutput struct {
 	Token types.Token
 }
 
-// CreateTarget(string, types.Target) error
-type CreateTargetArgs struct {
+type CreateTargetInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 	Target        types.Target
 }
 
-type CreateTargetResponse struct {
+type CreateTargetOutput struct {
 }
 
-// CreateToken(string) (types.Token, error)
-type CreateTokenArgs struct {
+type CreateTokenInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 }
 
-type CreateTokenResponse struct {
+type CreateTokenOutput struct {
 	Token types.Token
 }
 
-// DeleteProject(string) error
-type DeleteProjectArgs struct {
+type DeleteProjectInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 }
 
-type DeleteProjectResponse struct {
+type DeleteProjectOutput struct {
 }
 
-// DeleteProjectToken(string, string) error
-type DeleteProjectTokenArgs struct {
+type DeleteProjectTokenInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 	TokenID       string
 }
 
-type DeleteProjectTokenResponse struct {
+type DeleteProjectTokenOutput struct {
 }
 
-// DeleteTarget(string, string) error
-type DeleteTargetArgs struct {
+type DeleteTargetInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 	TargetName    string
 }
 
-type DeleteTargetResponse struct {
+type DeleteTargetOutput struct {
 }
 
-// GetProject(string) (responses.GetProject, error)
-type GetProjectArgs struct {
+type GetProjectInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 }
 
-type GetProjectResponse struct {
+type GetProjectOutput struct {
 	Project responses.GetProject // TODO change this type?
 }
 
-// ProjectTokenExists(string, string) (types.ProjectToken, error)
-type ProjectTokenExistsArgs struct {
+type ProjectTokenExistsInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 	TokenID       string // TODO correct?
 }
 
-type ProjectTokenExistsResponse struct {
+type ProjectTokenExistsOutput struct {
 	Exists bool
 }
 
-// GetTarget(string, string) (types.Target, error)
-type GetTargetArgs struct {
+type GetTargetInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 	TargetName    string
 }
 
-type GetTargetResponse struct {
+type GetTargetOutput struct {
 	Target types.Target
 }
 
-// GetToken() (string, error)
-type GetTokenArgs struct {
+type GetTokenInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	// TODO correct? should we also take a
@@ -223,154 +214,138 @@ type GetTokenArgs struct {
 	// our router/handler?
 }
 
-type GetTokenResponse struct {
+type GetTokenOutput struct {
 	Token string // TODO correct? should just be the token value?
 }
 
-// ListTargets(string) ([]string, error)
-type ListTargetsArgs struct {
+type ListTargetsInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 }
 
-type ListTargetsResponse struct {
+type ListTargetsOutput struct {
 	Targets []string
 }
 
-// ProjectExists(string) (bool, error)
-type ProjectExistsArgs struct {
+type ProjectExistsInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 }
 
-type ProjectExistsResponse struct {
+type ProjectExistsOutput struct {
 	Exists bool
 }
 
-// TargetExists(string, string) (bool, error)
-type TargetExistsArgs struct {
+type TargetExistsInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 	TargetName    string
 }
 
-type TargetExistsResponse struct {
+type TargetExistsOutput struct {
 	Exists bool
 }
 
-// UpdateTarget(string, types.Target) error
-type UpdateTargetArgs struct {
+type UpdateTargetInput struct {
 	Authorization Authorization
 	Headers       http.Header
 	ProjectName   string
 	Target        types.Target
 }
 
-type UpdateTargetResponse struct {
+type UpdateTargetOutput struct {
 }
 
-func (g *ProviderV2RPCClient) CreateProject(args CreateProjectArgs) (CreateProjectResponse, error) {
-	var resp CreateProjectResponse
-	err := g.client.Call("Plugin.CreateProject", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) CreateProject(input CreateProjectInput) (CreateProjectOutput, error) {
+	var output CreateProjectOutput
+	err := g.client.Call("Plugin.CreateProject", input, &output)
+	return output, err
 }
 
-func (g *ProviderV2RPCClient) CreateTarget(args CreateTargetArgs) (CreateTargetResponse, error) {
-	var resp CreateTargetResponse
-	err := g.client.Call("Plugin.CreateTarget", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) CreateTarget(input CreateTargetInput) (CreateTargetOutput, error) {
+	var output CreateTargetOutput
+	err := g.client.Call("Plugin.CreateTarget", input, &output)
+	return output, err
 }
 
-// CreateToken(projectName string) (types.Token, error)
-func (g *ProviderV2RPCClient) CreateToken(args CreateTokenArgs) (CreateTokenResponse, error) {
-	var resp CreateTokenResponse
-	err := g.client.Call("Plugin.CreateToken", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) CreateToken(input CreateTokenInput) (CreateTokenOutput, error) {
+	var output CreateTokenOutput
+	err := g.client.Call("Plugin.CreateToken", input, &output)
+	return output, err
 }
 
-// DeleteProject(name string) error
 // TODO
-func (g *ProviderV2RPCClient) DeleteProject(args DeleteProjectArgs) (DeleteProjectResponse, error) {
-	var resp DeleteProjectResponse
-	err := g.client.Call("Plugin.DeleteProject", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) DeleteProject(input DeleteProjectInput) (DeleteProjectOutput, error) {
+	var output DeleteProjectOutput
+	err := g.client.Call("Plugin.DeleteProject", input, &output)
+	return output, err
 }
 
-// DeleteProjectToken(projectName string, tokenID string) error
 // TODO
-func (g *ProviderV2RPCClient) DeleteProjectToken(args DeleteProjectTokenArgs) (DeleteProjectTokenResponse, error) {
-	var resp DeleteProjectTokenResponse
-	err := g.client.Call("Plugin.DeleteProjectToken", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) DeleteProjectToken(input DeleteProjectTokenInput) (DeleteProjectTokenOutput, error) {
+	var output DeleteProjectTokenOutput
+	err := g.client.Call("Plugin.DeleteProjectToken", input, &output)
+	return output, err
 }
 
-// DeleteTarget(projectName string, targetName string) error
 // TODO
-func (g *ProviderV2RPCClient) DeleteTarget(args DeleteTargetArgs) (DeleteTargetResponse, error) {
-	var resp DeleteTargetResponse
-	err := g.client.Call("Plugin.DeleteTarget", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) DeleteTarget(input DeleteTargetInput) (DeleteTargetOutput, error) {
+	var output DeleteTargetOutput
+	err := g.client.Call("Plugin.DeleteTarget", input, &output)
+	return output, err
 }
 
-// GetProject(name string) (responses.GetProject, error)
-func (g *ProviderV2RPCClient) GetProject(args GetProjectArgs) (GetProjectResponse, error) {
-	var resp GetProjectResponse
-	err := g.client.Call("Plugin.GetProject", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) GetProject(input GetProjectInput) (GetProjectOutput, error) {
+	var output GetProjectOutput
+	err := g.client.Call("Plugin.GetProject", input, &output)
+	return output, err
 }
 
-// ProjectTokenExists(projectName string, tokenID string) (types.ProjectToken, error)
-func (g *ProviderV2RPCClient) ProjectTokenExists(args ProjectTokenExistsArgs) (ProjectTokenExistsResponse, error) {
-	var resp ProjectTokenExistsResponse
-	err := g.client.Call("Plugin.ProjectTokenExists", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) ProjectTokenExists(input ProjectTokenExistsInput) (ProjectTokenExistsOutput, error) {
+	var output ProjectTokenExistsOutput
+	err := g.client.Call("Plugin.ProjectTokenExists", input, &output)
+	return output, err
 }
 
-// GetTarget(projectName string, targetName string) (types.Target, error)
-func (g *ProviderV2RPCClient) GetTarget(args GetTargetArgs) (GetTargetResponse, error) {
-	var resp GetTargetResponse
-	err := g.client.Call("Plugin.GetTarget", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) GetTarget(input GetTargetInput) (GetTargetOutput, error) {
+	var output GetTargetOutput
+	err := g.client.Call("Plugin.GetTarget", input, &output)
+	return output, err
 }
 
-// GetToken() (string, error)
-// TODO args correct?
-func (g *ProviderV2RPCClient) GetToken(args GetTokenArgs) (GetTokenResponse, error) {
-	var resp GetTokenResponse
-	err := g.client.Call("Plugin.GetToken", args, &resp)
-	return resp, err
+// TODO input correct?
+func (g *ProviderV2RPCClient) GetToken(input GetTokenInput) (GetTokenOutput, error) {
+	var output GetTokenOutput
+	err := g.client.Call("Plugin.GetToken", input, &output)
+	return output, err
 }
 
-// ListTargets(projectName string) ([]string, error)
-func (g *ProviderV2RPCClient) ListTargets(args ListTargetsArgs) (ListTargetsResponse, error) {
-	var resp ListTargetsResponse
-	err := g.client.Call("Plugin.ListTargets", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) ListTargets(input ListTargetsInput) (ListTargetsOutput, error) {
+	var output ListTargetsOutput
+	err := g.client.Call("Plugin.ListTargets", input, &output)
+	return output, err
 }
 
-// ProjectExists(projectName string) (bool, error)
-func (g *ProviderV2RPCClient) ProjectExists(args ProjectExistsArgs) (ProjectExistsResponse, error) {
-	var resp ProjectExistsResponse
-	err := g.client.Call("Plugin.ProjectExists", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) ProjectExists(input ProjectExistsInput) (ProjectExistsOutput, error) {
+	var output ProjectExistsOutput
+	err := g.client.Call("Plugin.ProjectExists", input, &output)
+	return output, err
 }
 
-// TargetExists(projectName string, targetName string) (bool, error)
-func (g *ProviderV2RPCClient) TargetExists(args TargetExistsArgs) (TargetExistsResponse, error) {
-	var resp TargetExistsResponse
-	err := g.client.Call("Plugin.TargetExists", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) TargetExists(input TargetExistsInput) (TargetExistsOutput, error) {
+	var output TargetExistsOutput
+	err := g.client.Call("Plugin.TargetExists", input, &output)
+	return output, err
 }
 
-// UpdateTarget(projectName string, targetName types.Target) error
 // TODO
-func (g *ProviderV2RPCClient) UpdateTarget(args UpdateTargetArgs) (UpdateTargetResponse, error) {
-	var resp UpdateTargetResponse
-	err := g.client.Call("Plugin.UpdateTarget", args, &resp)
-	return resp, err
+func (g *ProviderV2RPCClient) UpdateTarget(input UpdateTargetInput) (UpdateTargetOutput, error) {
+	var output UpdateTargetOutput
+	err := g.client.Call("Plugin.UpdateTarget", input, &output)
+	return output, err
 }
 
 // Here is the RPC server that ProviderV2RPC talks to, conforming to
@@ -381,39 +356,39 @@ type ProviderV2RPCServer struct {
 }
 
 // TODO not sure if this is the best way to handle accepting/returning args
-func (s *ProviderV2RPCServer) CreateProject(args CreateProjectArgs, resp *CreateProjectResponse) error {
-	v, err := s.Impl.CreateProject(args)
-	*resp = v
+func (s *ProviderV2RPCServer) CreateProject(input CreateProjectInput, output *CreateProjectOutput) error {
+	v, err := s.Impl.CreateProject(input)
+	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) CreateTarget(args CreateTargetArgs, resp *CreateTargetResponse) error {
-	v, err := s.Impl.CreateTarget(args)
-	*resp = v
+func (s *ProviderV2RPCServer) CreateTarget(input CreateTargetInput, output *CreateTargetOutput) error {
+	v, err := s.Impl.CreateTarget(input)
+	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) CreateToken(args CreateTokenArgs, resp *CreateTokenResponse) error {
-	v, err := s.Impl.CreateToken(args)
-	*resp = v
+func (s *ProviderV2RPCServer) CreateToken(input CreateTokenInput, output *CreateTokenOutput) error {
+	v, err := s.Impl.CreateToken(input)
+	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) GetToken(args GetTokenArgs, resp *GetTokenResponse) error {
-	v, err := s.Impl.GetToken(args)
-	*resp = v
+func (s *ProviderV2RPCServer) GetToken(input GetTokenInput, output *GetTokenOutput) error {
+	v, err := s.Impl.GetToken(input)
+	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) ProjectExists(args ProjectExistsArgs, resp *ProjectExistsResponse) error {
-	v, err := s.Impl.ProjectExists(args)
-	*resp = v
+func (s *ProviderV2RPCServer) ProjectExists(input ProjectExistsInput, output *ProjectExistsOutput) error {
+	v, err := s.Impl.ProjectExists(input)
+	*output = v
 	return err
 }
 
-func (s *ProviderV2RPCServer) TargetExists(args TargetExistsArgs, resp *TargetExistsResponse) error {
-	v, err := s.Impl.TargetExists(args)
-	*resp = v
+func (s *ProviderV2RPCServer) TargetExists(input TargetExistsInput, output *TargetExistsOutput) error {
+	v, err := s.Impl.TargetExists(input)
+	*output = v
 	return err
 }
 

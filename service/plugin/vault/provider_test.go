@@ -68,7 +68,7 @@ func TestVaultCreateProject(t *testing.T) {
 				}),
 			}
 
-			resp, err := v.CreateProject(credentials.CreateProjectArgs{
+			resp, err := v.CreateProject(credentials.CreateProjectInput{
 				ProjectName: "testProject",
 			})
 
@@ -132,7 +132,7 @@ func TestVaultCreateTarget(t *testing.T) {
 				}),
 			}
 
-			_, err := v.CreateTarget(credentials.CreateTargetArgs{
+			_, err := v.CreateTarget(credentials.CreateTargetInput{
 				ProjectName: "testProject",
 				Target:      types.Target{},
 			})
@@ -198,7 +198,7 @@ func TestVaultDeleteProject(t *testing.T) {
 			}
 
 			// TODO check the response?
-			_, err := v.DeleteProject(credentials.DeleteProjectArgs{
+			_, err := v.DeleteProject(credentials.DeleteProjectInput{
 				ProjectName: "testProject",
 			})
 			if err != nil {
@@ -253,7 +253,7 @@ func TestVaultDeleteTarget(t *testing.T) {
 				}),
 			}
 
-			_, err := v.DeleteTarget(credentials.DeleteTargetArgs{
+			_, err := v.DeleteTarget(credentials.DeleteTargetInput{
 				ProjectName: "testProject",
 				TargetName:  "testTarget",
 			})
@@ -300,7 +300,7 @@ func TestGetProject(t *testing.T) {
 			}
 
 			// TODO should this test the result?
-			_, err := v.GetProject(credentials.GetProjectArgs{
+			_, err := v.GetProject(credentials.GetProjectInput{
 				ProjectName: "testProject",
 			})
 			if err != nil {
@@ -363,7 +363,7 @@ func TestGetTarget(t *testing.T) {
 			}
 
 			// TODO should this test the result?
-			_, err := v.GetTarget(credentials.GetTargetArgs{
+			_, err := v.GetTarget(credentials.GetTargetInput{
 				ProjectName: "testProject",
 				TargetName:  "testTarget",
 			})
@@ -422,7 +422,7 @@ func TestVaultGetToken(t *testing.T) {
 				}),
 			}
 
-			resp, err := v.GetToken(credentials.GetTokenArgs{})
+			resp, err := v.GetToken(credentials.GetTokenInput{})
 			if err != nil {
 				if !tt.errResult {
 					t.Errorf("\ndid not expect error, got: %v", err)
@@ -444,7 +444,7 @@ func TestVaultListTargets(t *testing.T) {
 	tests := []struct {
 		name            string
 		admin           bool
-		want            credentials.ListTargetsResponse
+		want            credentials.ListTargetsOutput
 		expectedTargets []string
 		vaultErr        error
 		errResult       bool
@@ -452,7 +452,7 @@ func TestVaultListTargets(t *testing.T) {
 		{
 			name:  "list target success",
 			admin: true,
-			want: credentials.ListTargetsResponse{
+			want: credentials.ListTargetsOutput{
 				Targets: []string{"target1", "target2"},
 			},
 		},
@@ -494,7 +494,7 @@ func TestVaultListTargets(t *testing.T) {
 				}),
 			}
 
-			resp, err := v.ListTargets(credentials.ListTargetsArgs{
+			resp, err := v.ListTargets(credentials.ListTargetsInput{
 				ProjectName: "test",
 			})
 			if err != nil {
@@ -546,7 +546,7 @@ func TestVaultProjectExists(t *testing.T) {
 				}),
 			}
 
-			resp, err := v.ProjectExists(credentials.ProjectExistsArgs{
+			resp, err := v.ProjectExists(credentials.ProjectExistsInput{
 				ProjectName: "testProject",
 			})
 			if err != nil {
@@ -570,7 +570,7 @@ func TestVaultProjectTokenExists(t *testing.T) {
 	tests := []struct {
 		name          string
 		admin         bool
-		want          credentials.ProjectTokenExistsResponse
+		want          credentials.ProjectTokenExistsOutput
 		mockVaultData map[string]interface{}
 		vaultErr      error
 		errResult     bool
@@ -578,7 +578,7 @@ func TestVaultProjectTokenExists(t *testing.T) {
 		{
 			name:  "exists",
 			admin: true,
-			want: credentials.ProjectTokenExistsResponse{
+			want: credentials.ProjectTokenExistsOutput{
 				Exists: true,
 			},
 			mockVaultData: map[string]interface{}{
@@ -590,7 +590,7 @@ func TestVaultProjectTokenExists(t *testing.T) {
 		{
 			name:  "does not exist",
 			admin: true,
-			want: credentials.ProjectTokenExistsResponse{
+			want: credentials.ProjectTokenExistsOutput{
 				Exists: false,
 			},
 			vaultErr:      fmt.Errorf("failed to find accessor entry for secret_id_accessor"),
@@ -628,7 +628,7 @@ func TestVaultProjectTokenExists(t *testing.T) {
 				}),
 			}
 
-			resp, err := v.ProjectTokenExists(credentials.ProjectTokenExistsArgs{
+			resp, err := v.ProjectTokenExists(credentials.ProjectTokenExistsInput{
 				ProjectName: "testProject",
 				TokenID:     "testToken",
 			})
