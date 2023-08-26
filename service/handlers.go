@@ -635,7 +635,6 @@ func (h handler) createProject(w http.ResponseWriter, r *http.Request) {
 		ProjectName:   capp.Name,
 	}
 
-	// token, err := cp.CreateProject(capp.Name)
 	createProjOutput, err := credProvider.CreateProject(createProjReq)
 	if err != nil {
 		level.Error(l).Log("message", "error creating project", "error", err)
@@ -839,7 +838,6 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 	level.Debug(l).Log("message", "creating credential provider")
 	credProvider := h.credentialsPlugins["vault"]
 
-	// TODO should we check this first?
 	projExistInput := credentials.ProjectExistsInput{
 		Authorization: *a,
 		Headers:       r.Header,
@@ -927,7 +925,6 @@ func (h handler) deleteTarget(w http.ResponseWriter, r *http.Request) {
 		TargetName:  targetName,
 	}
 
-	// TODO don't need the response?
 	_, err = credProvider.DeleteTarget(deleteTargetInput)
 	if err != nil {
 		level.Error(l).Log("message", "error deleting target", "error", err)
@@ -1160,13 +1157,9 @@ func (h handler) deleteToken(w http.ResponseWriter, r *http.Request) {
 
 	projTokenExistsOutput, err := credProvider.ProjectTokenExists(projTokenExistsInput)
 	if err != nil {
-		// do not return an error if project token is not found
-		if !errors.Is(err, credentials.ErrProjectTokenNotFound) {
-			level.Error(l).Log("message", "error retrieving token from credentials provider", "error", err)
-			h.errorResponse(w, "error retrieving token", http.StatusInternalServerError)
-			return
-		}
-		level.Warn(l).Log("message", "token does not exist in credential provider", "error", err)
+		level.Error(l).Log("message", "error retrieving token from credentials provider", "error", err)
+		h.errorResponse(w, "error retrieving token", http.StatusInternalServerError)
+		return
 	}
 
 	dbProjectToken, err := h.dbClient.ReadTokenEntry(ctx, tokenID)
@@ -1206,6 +1199,8 @@ func (h handler) deleteToken(w http.ResponseWriter, r *http.Request) {
 			h.errorResponse(w, "error deleting token", http.StatusInternalServerError)
 			return
 		}
+	} else {
+		level.Warn(l).Log("message", "token does not exist in credential provider", "error", err)
 	}
 }
 

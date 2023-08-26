@@ -41,18 +41,14 @@ const (
 )
 
 var (
-	// ErrNotFound conveys that the item was not found.
+	// errNotFound conveys that the item was not found.
 	// TODO does this need to be elevated to a first class error that
 	// plugins can return?
-	ErrNotFound = errors.New("item not found")
-	// ErrTargetNotFound conveys that the target was not round.
+	errNotFound = errors.New("item not found")
+	// errTargetNotFound conveys that the target was not round.
 	// TODO does this need to be elevated to a first class error that
 	// plugins can return?
-	ErrTargetNotFound = errors.New("target not found")
-	// ErrProjectTokenNotFound conveys that the token was not found.
-	// TODO does this need to be elevated to a first class error that
-	// plugins can return?
-	ErrProjectTokenNotFound = errors.New("project token not found")
+	errTargetNotFound = errors.New("target not found")
 )
 
 type vaultSvc struct {
@@ -153,7 +149,6 @@ func newVaultSvc(auth credentials.Authorization, h http.Header) (vaultSvc, error
 
 // NewVaultProvider returns a new VaultProvider
 func NewVaultProvider(a credentials.Authorization, h http.Header) (credentials.Provider, error) {
-	// config := vaultConfigFn(&vault.Config{Address: env.VaultAddress}, env.VaultRole, env.VaultSecret)
 	config := NewVaultConfig(
 		&vault.Config{Address: os.Getenv("VAULT_ADDR")},
 		os.Getenv("VAULT_ROLE"),
@@ -403,7 +398,7 @@ func (v *VaultProvider) GetProject(input credentials.GetProjectInput) (credentia
 	}
 
 	if sec == nil {
-		return output, ErrNotFound
+		return output, errNotFound
 	}
 
 	output.Project.Name = name
@@ -435,8 +430,9 @@ func (v *VaultProvider) GetTarget(input credentials.GetTargetInput) (credentials
 		return output, fmt.Errorf("vault get target error: %w", err)
 	}
 
+	// TODO still needed as we have TargetExists?
 	if sec == nil {
-		return output, ErrTargetNotFound
+		return output, errTargetNotFound
 	}
 
 	// These should always exist.
@@ -543,8 +539,6 @@ func (v *VaultProvider) GetToken(input credentials.GetTokenInput) (credentials.G
 	}
 
 	options := map[string]interface{}{
-		// "role_id":   v.roleID,
-		// "secret_id": v.secretID,
 		"role_id":   svc.roleID,
 		"secret_id": svc.secretID,
 	}
@@ -639,7 +633,8 @@ func (v *VaultProvider) ProjectExists(input credentials.ProjectExistsInput) (cre
 		ProjectName:   name,
 	})
 
-	if errors.Is(err, ErrNotFound) {
+	// TODO Is this correct?
+	if errors.Is(err, errNotFound) {
 		return output, nil
 	}
 
@@ -696,8 +691,9 @@ func (v *VaultProvider) TargetExists(input credentials.TargetExistsInput) (crede
 		TargetName:    targetName,
 	})
 	// TODO this wasn't handling errors properly - we're now using the same
-	// approach as ProjectExists
-	if errors.Is(err, ErrTargetNotFound) {
+	// approach as ProjectExists. Is this correct?
+
+	if errors.Is(err, errTargetNotFound) {
 		return output, nil
 	}
 

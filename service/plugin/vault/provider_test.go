@@ -407,7 +407,7 @@ func TestGetTarget(t *testing.T) {
 			name:  "get target success",
 			admin: true,
 		},
-		// TODO
+		// TODO remove/update depending on if this should require admin or not.
 		// {
 		// 	name:      "get target admin error",
 		// 	admin:     false,
@@ -607,7 +607,7 @@ func TestVaultProjectExists(t *testing.T) {
 		{
 			name:      "get project not found",
 			exists:    false,
-			vaultErr:  ErrNotFound,
+			vaultErr:  errNotFound,
 			expectErr: false,
 		},
 		{

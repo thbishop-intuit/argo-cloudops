@@ -20,16 +20,6 @@ const (
 	authorizationKeyAdmin = "admin"
 )
 
-// TODO needed?
-var (
-	// ErrNotFound conveys that the item was not found.
-	ErrNotFound = errors.New("item not found")
-	// ErrTargetNotFound conveys that the target was not round.
-	ErrTargetNotFound = errors.New("target not found")
-	// ErrProjectTokenNotFound conveys that the token was not found.
-	ErrProjectTokenNotFound = errors.New("project token not found")
-)
-
 // Authorization represents a user's authorization token.
 type Authorization struct {
 	Provider string `valid:"required"`
@@ -260,6 +250,7 @@ type UpdateTargetInput struct {
 	Target        types.Target
 }
 
+// TODO return the target info?
 type UpdateTargetOutput struct {
 }
 
@@ -351,7 +342,6 @@ func (g *ProviderRPCClient) TargetExists(input TargetExistsInput) (TargetExistsO
 	return output, err
 }
 
-// TODO
 func (g *ProviderRPCClient) UpdateTarget(input UpdateTargetInput) (UpdateTargetOutput, error) {
 	var output UpdateTargetOutput
 	err := g.client.Call("Plugin.UpdateTarget", input, &output)
