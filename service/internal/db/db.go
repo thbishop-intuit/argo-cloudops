@@ -4,6 +4,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/cello-proj/cello/internal/types"
 
@@ -23,6 +24,15 @@ type TokenEntry struct {
 	TokenID   string `db:"token_id"`
 }
 
+type TargetEntry struct {
+	CreatedAt  string           `db:"created_at"`
+	TargetID   string           `db:"target_id"`
+	ProjectID  string           `db:"project"`
+	Properties postgresql.JSONB `db:"properties"`
+	Type       string           `db:"type"`
+	UpdatedAt  string           `db:"updated_at"`
+}
+
 // IsEmpty returns whether a struct is empty.
 func (t TokenEntry) IsEmpty() bool {
 	return t == (TokenEntry{})
@@ -37,6 +47,11 @@ type Client interface {
 	DeleteTokenEntry(ctx context.Context, token string) error
 	ReadTokenEntry(ctx context.Context, token string) (TokenEntry, error)
 	ListTokenEntries(ctx context.Context, project string) ([]TokenEntry, error)
+	CreateTargetEntry(ctx context.Context, project string, entry types.Target) error
+	DeleteTargetEntry(ctx context.Context, project, target string) error
+	ListTargetEntries(ctx context.Context, project string) ([]TargetEntry, error)
+	ReadTargetEntry(ctx context.Context, project, target string) (TargetEntry, error)
+	UpdateTargetEntry(ctx context.Context, project string, entry types.Target) error
 	Health(ctx context.Context) error
 }
 
@@ -50,6 +65,7 @@ type SQLClient struct {
 
 const (
 	ProjectEntryDB = "projects"
+	TargetEntryDB  = "targets"
 	TokenEntryDB   = "tokens"
 )
 
@@ -124,6 +140,90 @@ func (d SQLClient) DeleteProjectEntry(ctx context.Context, project string) error
 	defer sess.Close()
 
 	return sess.WithContext(ctx).Collection(ProjectEntryDB).Find("project", project).Delete()
+}
+
+func (d SQLClient) CreateTargetEntry(ctx context.Context, project string, target types.Target) error {
+	sess, err := d.createSession()
+	if err != nil {
+		return err
+	}
+	defer sess.Close()
+
+	err = sess.WithContext(ctx).Tx(func(sess db.Session) error {
+		now := time.Now().UTC().Format(time.RFC3339Nano)
+
+		res := TargetEntry{
+			CreatedAt:  now,
+			TargetID:   target.Name,
+			ProjectID:  project,
+			Properties: postgresql.JSONB{V: target.Properties},
+			Type:       target.Type,
+			UpdatedAt:  now,
+		}
+
+		if _, err = sess.Collection(TargetEntryDB).Insert(res); err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+func (d SQLClient) DeleteTargetEntry(ctx context.Context, project, target string) error {
+	sess, err := d.createSession()
+	if err != nil {
+		return err
+	}
+	defer sess.Close()
+
+	return sess.WithContext(ctx).Collection(TargetEntryDB).Find("project", project, "target_id", target).Delete()
+}
+
+func (d SQLClient) ListTargetEntries(ctx context.Context, project string) ([]TargetEntry, error) {
+	res := []TargetEntry{}
+
+	sess, err := d.createSession()
+	if err != nil {
+		return res, err
+	}
+	defer sess.Close()
+
+	err = sess.WithContext(ctx).Collection(TargetEntryDB).Find("project", project).OrderBy("-created_at").All(&res)
+	// TODO need to process properties?
+	return res, err
+}
+
+func (d SQLClient) ReadTargetEntry(ctx context.Context, project, target string) (TargetEntry, error) {
+	res := TargetEntry{}
+	sess, err := d.createSession()
+	if err != nil {
+		return res, err
+	}
+	defer sess.Close()
+
+	err = sess.WithContext(ctx).Collection(TargetEntryDB).Find("project", project, "target_id", target).One(&res)
+	// TODO process properties?
+	return res, err
+}
+
+func (d SQLClient) UpdateTargetEntry(ctx context.Context, project string, target types.Target) error {
+	sess, err := d.createSession()
+	if err != nil {
+		return err
+	}
+	defer sess.Close()
+
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+
+	res := TargetEntry{
+		TargetID:   target.Name,
+		ProjectID:  project,
+		Properties: postgresql.JSONB{V: target.Properties},
+		Type:       target.Type,
+		UpdatedAt:  now,
+	}
+	// TODO need to process properties?
+	return sess.WithContext(ctx).Collection(TargetEntryDB).UpdateReturning(res)
 }
 
 func (d SQLClient) CreateTokenEntry(ctx context.Context, token types.Token) error {

@@ -1,0 +1,2 @@
+REVOKE ALL PRIVILEGES ON targets FROM cello;
+DROP TABLE IF EXISTS targets;

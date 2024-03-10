@@ -514,6 +514,9 @@ func TestCreateTarget(t *testing.T) {
 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return false, nil },
 			},
+			dbMock: &th.DBClientMock{
+				CreateTargetEntryFunc: func(ctx context.Context, project string, target types.Target) error { return nil },
+			},
 		},
 		{
 			name:       "fails to create target when not admin",
@@ -596,6 +599,9 @@ func TestDeleteTarget(t *testing.T) {
 			cpMock: &th.CredsProviderMock{
 				DeleteTargetFunc: func(s1, s2 string) error { return nil },
 			},
+			dbMock: &th.DBClientMock{
+				DeleteTargetEntryFunc: func(ctx context.Context, project, target string) error { return nil },
+			},
 		},
 		{
 			name:       "target fails to delete",
@@ -637,6 +643,9 @@ func TestUpdateTarget(t *testing.T) {
 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
 				UpdateTargetFunc:  func(s string, target types.Target) error { return nil },
+			},
+			dbMock: &th.DBClientMock{
+				UpdateTargetEntryFunc: func(ctx context.Context, project string, target types.Target) error { return nil },
 			},
 		},
 		{
@@ -706,6 +715,9 @@ func TestUpdateTarget(t *testing.T) {
 				ProjectExistsFunc: func(s string) (bool, error) { return true, nil },
 				TargetExistsFunc:  func(s1, s2 string) (bool, error) { return true, nil },
 				UpdateTargetFunc:  func(s string, target types.Target) error { return nil },
+			},
+			dbMock: &th.DBClientMock{
+				UpdateTargetEntryFunc: func(ctx context.Context, project string, target types.Target) error { return nil },
 			},
 		},
 		{

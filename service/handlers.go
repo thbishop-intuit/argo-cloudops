@@ -833,6 +833,9 @@ func (h handler) createTarget(w http.ResponseWriter, r *http.Request) {
 		h.errorResponse(w, "error creating target", http.StatusInternalServerError)
 		return
 	}
+
+	h.persistTarget(l, persistCreate, projectName, types.Target(ctr))
+
 	fmt.Fprint(w, "{}")
 }
 
@@ -871,6 +874,8 @@ func (h handler) deleteTarget(w http.ResponseWriter, r *http.Request) {
 		h.errorResponse(w, "error deleting target", http.StatusInternalServerError)
 		return
 	}
+
+	h.persistTarget(l, persistDelete, projectName, types.Target{Name: targetName})
 }
 
 // Lists the targets for a project
@@ -1023,6 +1028,8 @@ func (h handler) updateTarget(w http.ResponseWriter, r *http.Request) {
 		h.errorResponse(w, "error updating target", http.StatusInternalServerError)
 		return
 	}
+
+	h.persistTarget(l, persistUpdate, projectName, target)
 
 	data, err := json.Marshal(target)
 	if err != nil {
@@ -1279,4 +1286,39 @@ func (h handler) requestLogger(r *http.Request, fields ...interface{}) log.Logge
 		h.logger,
 		append([]interface{}{"txid", r.Header.Get(txIDHeader)}, fields...)...,
 	)
+}
+
+// For persistence operations
+type persistOp string
+
+const (
+	persistCreate persistOp = "create"
+	persistDelete persistOp = "delete"
+	persistUpdate persistOp = "update"
+)
+
+// persistTarget will quietly persist target change to the DB.
+func (h handler) persistTarget(logger log.Logger, op persistOp, projectName string, target types.Target) {
+	l := log.With(logger, "persist-target", op)
+
+	ctx := context.Background()
+
+	level.Info(l).Log("message", "starting")
+	var err error
+	switch op {
+	case persistCreate:
+		err = h.dbClient.CreateTargetEntry(ctx, projectName, target)
+	case persistDelete:
+		err = h.dbClient.DeleteTargetEntry(ctx, projectName, target.Name)
+	case persistUpdate:
+		err = h.dbClient.UpdateTargetEntry(ctx, projectName, target)
+	default:
+		level.Error(l).Log("message", "unknown op passed")
+	}
+
+	if err != nil {
+		level.Error(l).Log("error", err)
+	}
+
+	level.Info(l).Log("message", "done")
 }
